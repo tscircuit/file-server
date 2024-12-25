@@ -24,3 +24,5 @@ RESPONSE { event: { event_id, ... } }
 The only `event_type` is `FILE_UPDATED`. Here's an example event:
 
 `{ event_id: "...", event_type: "FILE_UPDATED", file_path: "path/to/file.txt", created_at: "..." }`
+
+You can create your own event types and use the message bus is helpful.

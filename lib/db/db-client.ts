@@ -12,38 +12,49 @@ export type DbClient = ReturnType<typeof createDatabase>
 const initializer = combine(databaseSchema.parse({}), (set, get) => ({
   upsertFile: (file: Omit<File, "file_id">) => {
     set((state) => {
-      const existingFileIndex = state.files.findIndex(f => f.file_path === file.file_path)
-      const newFile = { 
-        ...file, 
-        file_id: existingFileIndex >= 0 ? state.files[existingFileIndex].file_id : state.idCounter.toString(),
-        created_at: existingFileIndex >= 0 ? state.files[existingFileIndex].created_at : new Date().toISOString()
+      const existingFileIndex = state.files.findIndex(
+        (f) => f.file_path === file.file_path,
+      )
+      const newFile = {
+        ...file,
+        file_id:
+          existingFileIndex >= 0
+            ? state.files[existingFileIndex].file_id
+            : state.idCounter.toString(),
+        created_at:
+          existingFileIndex >= 0
+            ? state.files[existingFileIndex].created_at
+            : new Date().toISOString(),
       }
-      
-      const files = existingFileIndex >= 0 
-        ? state.files.map((f, i) => i === existingFileIndex ? newFile : f)
-        : [...state.files, newFile]
+
+      const files =
+        existingFileIndex >= 0
+          ? state.files.map((f, i) => (i === existingFileIndex ? newFile : f))
+          : [...state.files, newFile]
 
       return {
         files,
-        idCounter: existingFileIndex >= 0 ? state.idCounter : state.idCounter + 1
+        idCounter:
+          existingFileIndex >= 0 ? state.idCounter : state.idCounter + 1,
       }
     })
-    
-    // Create FILE_UPDATED event
+
+    // @ts-ignore
     get().createEvent({
       event_type: "FILE_UPDATED",
       file_path: file.file_path,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
     })
 
-    return get().files.find(f => f.file_path === file.file_path)!
+    return get().files.find((f) => f.file_path === file.file_path)!
   },
 
-  getFile: (query: { file_id?: string, file_path?: string }) => {
+  getFile: (query: { file_id?: string; file_path?: string }) => {
     const state = get()
-    return state.files.find(f => 
-      (query.file_id && f.file_id === query.file_id) ||
-      (query.file_path && f.file_path === query.file_path)
+    return state.files.find(
+      (f) =>
+        (query.file_id && f.file_id === query.file_id) ||
+        (query.file_path && f.file_path === query.file_path),
     )
   },
 
@@ -51,9 +62,9 @@ const initializer = combine(databaseSchema.parse({}), (set, get) => ({
     set((state) => ({
       events: [
         ...state.events,
-        { ...event, event_id: state.idCounter.toString() }
+        { ...event, event_id: state.idCounter.toString() },
       ],
-      idCounter: state.idCounter + 1
+      idCounter: state.idCounter + 1,
     }))
     return get().events[get().events.length - 1]
   },
@@ -61,6 +72,6 @@ const initializer = combine(databaseSchema.parse({}), (set, get) => ({
   listEvents: (since?: string) => {
     const state = get()
     if (!since) return state.events
-    return state.events.filter(e => e.created_at > since)
-  }
+    return state.events.filter((e) => e.created_at > since)
+  },
 }))
