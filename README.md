@@ -1,4 +1,4 @@
-# simple-fs-server
+# @tscircuit/file-server
 
 The API uses an event bus architecture and a system for updating files, here are the endpoints
 
