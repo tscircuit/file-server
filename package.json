@@ -4,7 +4,7 @@
   "type": "module",
   "version": "0.0.8",
   "bin": {
-    "simple-fs-server": "./dist/cli.js"
+    "file-server": "./dist/cli.js"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.8.3",

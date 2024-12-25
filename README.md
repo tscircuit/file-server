@@ -1,28 +1,163 @@
 # @tscircuit/file-server
 
-The API uses an event bus architecture and a system for updating files, here are the endpoints
+A simple file server with REST API and event bus capabilities for managing text files.
 
+## Installation
+
+```bash
+npm install @tscircuit/file-server
+# or
+bun add @tscircuit/file-server
 ```
+
+## Command Line Usage
+
+Start the server:
+
+```bash
+# Start with default port 3062
+file-server
+
+# Start with custom port
+PORT=8080 file-server
+```
+
+## Library Usage
+
+```typescript
+import winterspecBundle from "@tscircuit/file-server"
+import { startServer } from "winterspec/adapters/node"
+
+const server = await startServer(winterspecBundle, {
+  port: 3062,
+})
+```
+
+## API Documentation
+
+### File Operations
+
+#### Create/Update File
+
+```http
 POST /files/upsert
-REQUEST: { file_id?, text_content, file_path }
-RESPONSE: { file: { file_id, file_path, text_content } }
+Content-Type: application/json
 
-GET /files/get?file_id?&file_path?
-RESPONSE: { file: { file_id, file_path, text_content } }
+{
+  "file_id": "optional-id",
+  "file_path": "path/to/file.txt",
+  "text_content": "File contents here"
+}
 
-GET /files/list
-RESPONSE { file_list: Array<{ file_id, file_path } }
-
-GET /events/list?since=<iso timestamp>
-RESPONSE { event_list: Array<{ event_id, created_at, event_type, ... }> }
-
-POST /events/create
-REQUEST { event_type: "..." }
-RESPONSE { event: { event_id, ... } }
+Response: {
+  "file": {
+    "file_id": "1",
+    "file_path": "path/to/file.txt",
+    "text_content": "File contents here",
+    "created_at": "2024-01-01T00:00:00.000Z"
+  }
+}
 ```
 
-The only `event_type` is `FILE_UPDATED`. Here's an example event:
+#### Get File
 
-`{ event_id: "...", event_type: "FILE_UPDATED", file_path: "path/to/file.txt", created_at: "..." }`
+```http
+GET /files/get?file_id=1
+# or
+GET /files/get?file_path=path/to/file.txt
 
-You can create your own event types and use the message bus is helpful.
+Response: {
+  "file": {
+    "file_id": "1",
+    "file_path": "path/to/file.txt",
+    "text_content": "File contents here",
+    "created_at": "2024-01-01T00:00:00.000Z"
+  }
+}
+```
+
+#### List Files
+
+```http
+GET /files/list
+
+Response: {
+  "file_list": [
+    {
+      "file_id": "1",
+      "file_path": "path/to/file.txt"
+    }
+  ]
+}
+```
+
+### Event Operations
+
+#### Create Event
+
+```http
+POST /events/create
+Content-Type: application/json
+
+{
+  "event_type": "FILE_UPDATED",
+  "file_path": "path/to/file.txt"
+}
+
+Response: {
+  "event": {
+    "event_id": "2",
+    "event_type": "FILE_UPDATED",
+    "file_path": "path/to/file.txt",
+    "created_at": "2024-01-01T00:00:00.000Z"
+  }
+}
+```
+
+#### List Events
+
+```http
+GET /events/list
+# or
+GET /events/list?since=2024-01-01T00:00:00.000Z
+
+Response: {
+  "event_list": [
+    {
+      "event_id": "2",
+      "event_type": "FILE_UPDATED",
+      "file_path": "path/to/file.txt",
+      "created_at": "2024-01-01T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+### Admin Interface
+
+The server includes a web-based admin interface for managing files:
+
+- `/admin/files/list` - View all files
+- `/admin/files/create` - Create new files
+- `/admin/files/get?file_path=...` - View file details
+
+## Event Types
+
+Built-in event types:
+
+- `FILE_UPDATED` - Triggered when a file is created or updated
+
+You can create custom event types by using the `/events/create` endpoint with your own event type names.
+
+## Development
+
+```bash
+# Start development server
+bun run dev
+
+# Run tests
+bun test
+
+# Build for production
+bun run build
+```
