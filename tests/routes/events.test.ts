@@ -9,9 +9,9 @@ test("custom events", async () => {
     event_type: "USER_LOGIN",
     user_id: "123",
     ip_address: "192.168.1.1",
-    success: true
+    success: true,
   }
-  
+
   const createRes = await axios.post("/events/create", customEvent)
   expect(createRes.data.event.event_type).toBe("USER_LOGIN")
   expect(createRes.data.event.user_id).toBe("123")
@@ -33,11 +33,11 @@ test("reset events", async () => {
   // Create some events
   await axios.post("/events/create", {
     event_type: "USER_LOGIN",
-    user_id: "123"
+    user_id: "123",
   })
   await axios.post("/events/create", {
     event_type: "USER_LOGIN",
-    user_id: "456"
+    user_id: "456",
   })
 
   // Verify events exist
@@ -46,7 +46,7 @@ test("reset events", async () => {
 
   // Reset events
   const resetRes = await axios.post("/events/reset")
-  expect(resetRes.data.success).toBe(true)
+  expect(resetRes.data.ok).toBe(true)
 
   // Verify events are cleared
   listRes = await axios.get("/events/list")
