@@ -34,7 +34,7 @@ export default withRouteSpec({
           <tr>
             <td>${file.file_path}</td>
             <td>
-              <a href="/admin/files/get?file_path=${encodeURIComponent(file.file_path)}">View Details</a>
+              <a href="./get?file_path=${encodeURIComponent(file.file_path)}">View Details</a>
             </td>
           </tr>
         `,
