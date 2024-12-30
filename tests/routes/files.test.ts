@@ -7,14 +7,14 @@ test("file operations", async () => {
   // Create a file
   const createRes = await axios.post("/files/upsert", {
     file_path: "/test.txt",
-    text_content: "Hello World"
+    text_content: "Hello World",
   })
   expect(createRes.data.file.file_path).toBe("/test.txt")
   expect(createRes.data.file.text_content).toBe("Hello World")
 
   // Get the file
   const getRes = await axios.get("/files/get", {
-    params: { file_path: "/test.txt" }
+    params: { file_path: "/test.txt" },
   })
   expect(getRes.data.file.text_content).toBe("Hello World")
 
