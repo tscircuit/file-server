@@ -22,7 +22,7 @@ export default withRouteSpec({
     </head>
     <body>
       <h1>Files</h1>
-      <p><a href="/admin/files/create" style="background-color: #4CAF50; color: white; padding: 10px 15px; border-radius: 4px; text-decoration: none; display: inline-block; margin-bottom: 20px;">Create New File</a></p>
+      <p><a href="./create" style="background-color: #4CAF50; color: white; padding: 10px 15px; border-radius: 4px; text-decoration: none; display: inline-block; margin-bottom: 20px;">Create New File</a></p>
       <table>
         <tr>
           <th>File Path</th>
@@ -45,7 +45,7 @@ export default withRouteSpec({
     </html>`,
     {
       headers: {
-        "Content-Type": "text/html",
+        "Content-Type": "text/html; charset=utf-8",
       },
     },
   )

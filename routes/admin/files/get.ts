@@ -30,7 +30,7 @@ export default withRouteSpec({
     </head>
     <body>
       <div class="container">
-        <p><a href="/admin/files/list">← Back to file list</a></p>
+        <p><a href="./list">← Back to file list</a></p>
         <h1>File Details</h1>
         <div class="details">
           <p><span class="label">File ID:</span> ${file.file_id}</p>
@@ -44,7 +44,7 @@ export default withRouteSpec({
     </html>`,
     {
       headers: {
-        "Content-Type": "text/html",
+        "Content-Type": "text/html; charset=utf-8",
       },
     },
   )
