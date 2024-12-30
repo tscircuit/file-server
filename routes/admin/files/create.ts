@@ -79,6 +79,6 @@ export default withRouteSpec({
       headers: {
         "Content-Type": "text/html",
       },
-    }
+    },
   )
 })

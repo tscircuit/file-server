@@ -29,6 +29,8 @@
     "build": "bun run build:bundle && bun run build:cli",
     "build:bundle": "winterspec bundle -o dist/bundle.js",
     "build:cli": "tsup cli.ts --format esm --dts",
-    "next:dev": "next dev"
+    "next:dev": "next dev",
+    "format": "biome format --write .",
+    "format:check": "biome format ."
   }
 }

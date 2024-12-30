@@ -19,6 +19,6 @@ export default withRouteSpec({
   }),
 })((req, ctx) => {
   const { file_id, file_path } = req.query
-  const file = ctx.db.getFile({ file_id, file_path })
+  const file = ctx.db.getFile({ file_id, file_path }) ?? null
   return ctx.json({ file })
 })

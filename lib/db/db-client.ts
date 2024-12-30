@@ -78,7 +78,7 @@ const initializer = combine(databaseSchema.parse({}), (set, get) => ({
   resetEvents: () => {
     set((state) => ({
       ...state,
-      events: []
+      events: [],
     }))
   },
 }))

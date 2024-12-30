@@ -28,14 +28,18 @@ export default withRouteSpec({
           <th>File Path</th>
           <th>Actions</th>
         </tr>
-        ${files.map(file => `
+        ${files
+          .map(
+            (file) => `
           <tr>
             <td>${file.file_path}</td>
             <td>
               <a href="/admin/files/get?file_path=${encodeURIComponent(file.file_path)}">View Details</a>
             </td>
           </tr>
-        `).join('')}
+        `,
+          )
+          .join("")}
       </table>
     </body>
     </html>`,
@@ -43,6 +47,6 @@ export default withRouteSpec({
       headers: {
         "Content-Type": "text/html",
       },
-    }
+    },
   )
 })
