@@ -74,4 +74,11 @@ const initializer = combine(databaseSchema.parse({}), (set, get) => ({
     if (!since) return state.events
     return state.events.filter((e) => e.created_at > since)
   },
+
+  resetEvents: () => {
+    set((state) => ({
+      ...state,
+      events: []
+    }))
+  },
 }))

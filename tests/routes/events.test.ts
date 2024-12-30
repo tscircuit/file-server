@@ -26,3 +26,29 @@ test("custom events", async () => {
   expect(createdEvent.ip_address).toBe("192.168.1.1")
   expect(createdEvent.success).toBe(true)
 })
+
+test("reset events", async () => {
+  const { axios } = await getTestServer()
+
+  // Create some events
+  await axios.post("/events/create", {
+    event_type: "USER_LOGIN",
+    user_id: "123"
+  })
+  await axios.post("/events/create", {
+    event_type: "USER_LOGIN",
+    user_id: "456"
+  })
+
+  // Verify events exist
+  let listRes = await axios.get("/events/list")
+  expect(listRes.data.event_list).toHaveLength(2)
+
+  // Reset events
+  const resetRes = await axios.post("/events/reset")
+  expect(resetRes.data.success).toBe(true)
+
+  // Verify events are cleared
+  listRes = await axios.get("/events/list")
+  expect(listRes.data.event_list).toHaveLength(0)
+})
