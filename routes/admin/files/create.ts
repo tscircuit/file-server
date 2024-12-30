@@ -59,7 +59,7 @@ export default withRouteSpec({
     </head>
     <body>
       <div class="container">
-        <p><a href="/admin/files/list">← Back to file list</a></p>
+        <p><a href="./list">← Back to file list</a></p>
         <h1>Create New File</h1>
         <form method="POST">
           <div class="form-group">
@@ -77,7 +77,7 @@ export default withRouteSpec({
     </html>`,
     {
       headers: {
-        "Content-Type": "text/html",
+        "Content-Type": "text/html; charset=utf-8",
       },
     },
   )
