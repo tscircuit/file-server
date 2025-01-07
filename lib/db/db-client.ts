@@ -1,7 +1,7 @@
 import { createStore } from "zustand/vanilla"
 import { hoist } from "zustand-hoist"
 import { combine } from "zustand/middleware"
-import { databaseSchema, type File, type Event } from "./schema.ts"
+import { databaseSchema, type File, type FileServerEvent } from "./schema.ts"
 
 export const createDatabase = () => {
   return hoist(createStore(initializer))
@@ -58,7 +58,7 @@ const initializer = combine(databaseSchema.parse({}), (set, get) => ({
     )
   },
 
-  createEvent: (event: Omit<Event, "event_id">) => {
+  createEvent: (event: Omit<FileServerEvent, "event_id">) => {
     set((state) => ({
       events: [
         ...state.events,
