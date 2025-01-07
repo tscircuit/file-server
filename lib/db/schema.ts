@@ -14,7 +14,7 @@ export const eventSchema = z.object({
   file_path: z.string(),
   created_at: z.string(),
 })
-export type Event = z.infer<typeof eventSchema>
+export type FileServerEvent = z.infer<typeof eventSchema>
 
 export const databaseSchema = z.object({
   idCounter: z.number().default(0),

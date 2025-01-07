@@ -7,6 +7,7 @@ export default withRouteSpec({
     file_id: z.string().optional(),
     text_content: z.string(),
     file_path: z.string(),
+    initiator: z.string().optional(),
   }),
   jsonResponse: z.object({
     file: z.object({
@@ -18,6 +19,6 @@ export default withRouteSpec({
   }),
 })(async (req, ctx) => {
   const body = await req.json()
-  const file = ctx.db.upsertFile(body)
+  const file = ctx.db.upsertFile(body, { initiator: body.initiator })
   return ctx.json({ file })
 })
