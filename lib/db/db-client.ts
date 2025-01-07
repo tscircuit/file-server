@@ -10,7 +10,7 @@ export const createDatabase = () => {
 export type DbClient = ReturnType<typeof createDatabase>
 
 const initializer = combine(databaseSchema.parse({}), (set, get) => ({
-  upsertFile: (file: Omit<File, "file_id">) => {
+  upsertFile: (file: Omit<File, "file_id">, opts: { initiator?: string }) => {
     set((state) => {
       const existingFileIndex = state.files.findIndex(
         (f) => f.file_path === file.file_path,
@@ -44,6 +44,7 @@ const initializer = combine(databaseSchema.parse({}), (set, get) => ({
       event_type: "FILE_UPDATED",
       file_path: file.file_path,
       created_at: new Date().toISOString(),
+      initiator: opts.initiator,
     })
 
     return get().files.find((f) => f.file_path === file.file_path)!
