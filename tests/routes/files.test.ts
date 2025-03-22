@@ -29,3 +29,53 @@ test("file operations", async () => {
   expect(eventsRes.data.event_list[0].event_type).toBe("FILE_UPDATED")
   expect(eventsRes.data.event_list[0].file_path).toBe("/test.txt")
 })
+
+test("file download operations", async () => {
+  const { axios } = await getTestServer()
+
+  await axios.post("/files/upsert", {
+    file_path: "/download-test.txt",
+    text_content: "Test download content",
+  })
+
+  const successRes = await axios.get("/files/download", {
+    params: { file_path: "/download-test.txt" },
+  })
+  expect(successRes.status).toBe(200)
+  expect(successRes.data).toBe("Test download content")
+  expect(successRes.headers.get("content-type")).toBe("text/plain")
+  expect(successRes.headers.get("content-disposition")).toBe(
+    'attachment; filename="download-test.txt"',
+  )
+
+  expect(
+    axios.get("/files/download", {
+      params: { file_path: "/missing-file.txt" },
+    }),
+  ).rejects.toMatchObject({
+    status: 404,
+    data: "File not found",
+  })
+})
+
+test("file download operations2", async () => {
+  const { axios } = await getTestServer()
+
+  await axios.post("/files/upsert", {
+    file_path: "/download-test2.txt",
+    text_content: "Test download content",
+  })
+
+  const successRes = await axios.get("/files/download/download-test2.txt")
+  expect(successRes.status).toBe(200)
+  expect(successRes.data).toBe("Test download content")
+  expect(successRes.headers.get("content-type")).toBe("text/plain")
+  expect(successRes.headers.get("content-disposition")).toBe(
+    'attachment; filename="download-test2.txt"',
+  )
+
+  expect(axios.get("/files/download/missing-file.txt")).rejects.toMatchObject({
+    status: 404,
+    data: "File not found",
+  })
+})
