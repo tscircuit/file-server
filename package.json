@@ -2,7 +2,7 @@
   "name": "@tscircuit/file-server",
   "main": "./dist/bundle.js",
   "type": "module",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "bin": {
     "file-server": "./dist/cli.js"
   },
