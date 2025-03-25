@@ -70,8 +70,6 @@ export default withRouteSpec({
   // Remove accept-encoding to prevent compression issues
   headers.delete("accept-encoding")
 
-  console.log(targetUrl, headers)
-
   try {
     // Forward the request to the target URL
     const response = await fetch(targetUrl, {
@@ -92,7 +90,7 @@ export default withRouteSpec({
   } catch (error) {
     console.error("Proxy error:", error)
     return ctx.json(
-      { error: "Failed to proxy request", details: error.message },
+      { error: { message: "Failed to proxy request" } },
       { status: 502 },
     )
   }
