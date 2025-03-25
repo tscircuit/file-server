@@ -42,4 +42,34 @@ describe("proxy route", () => {
       error: "X-Target-Url header is required",
     })
   })
+
+  test("should handle POST requests with a body correctly", async () => {
+    const { axios } = await getTestServer()
+
+    // Create a mock server that echoes back the request body
+    const mockServerPort = 4000
+    const mockServer = Bun.serve({
+      port: mockServerPort,
+      fetch(req) {
+        return new Response(req.body, {
+          headers: { "Content-Type": "application/json" },
+        })
+      },
+    })
+
+    try {
+      const testData = { test: "data" }
+      const response = await axios.post("/proxy", testData, {
+        headers: {
+          "X-Target-Url": `http://localhost:${mockServerPort}`,
+          "Content-Type": "application/json",
+        },
+      })
+
+      expect(response.status).toBe(200)
+      expect(response.data).toEqual(testData)
+    } finally {
+      mockServer.stop()
+    }
+  })
 })
