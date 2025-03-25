@@ -59,16 +59,41 @@ export default withRouteSpec({
     headers.set("Cookie", senderCookie)
   }
 
+  // Remove proxy-specific headers before forwarding
   for (const header of PROXY_HEADERS) {
     headers.delete(header)
   }
 
+  // Remove content-encoding to prevent decoding errors
+  headers.delete("content-encoding")
+
+  // Remove accept-encoding to prevent compression issues
+  headers.delete("accept-encoding")
+
   console.log(targetUrl, headers)
 
-  // Forward the request to the target URL
-  return fetch(targetUrl, {
-    method: req.method,
-    headers: headers,
-    body: ["GET", "HEAD"].includes(req.method) ? undefined : body,
-  })
+  try {
+    // Forward the request to the target URL
+    const response = await fetch(targetUrl, {
+      method: req.method,
+      headers: headers,
+      body: ["GET", "HEAD"].includes(req.method) ? undefined : body,
+    })
+
+    // Create a new response with the target's body but without problematic headers
+    const responseHeaders = new Headers(response.headers)
+    responseHeaders.delete("content-encoding") // Ensure no content-encoding in response
+
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: responseHeaders,
+    })
+  } catch (error) {
+    console.error("Proxy error:", error)
+    return ctx.json(
+      { error: "Failed to proxy request", details: error.message },
+      { status: 502 },
+    )
+  }
 })
