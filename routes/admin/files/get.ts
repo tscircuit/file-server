@@ -38,7 +38,7 @@ export default withRouteSpec({
           <p><span class="label">Created At:</span> ${file.created_at}</p>
         </div>
         <h2>Content:</h2>
-        <pre>${file.text_content}</pre>
+        <pre>${file.text_content.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>
       </div>
     </body>
     </html>`,
