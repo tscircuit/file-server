@@ -79,3 +79,77 @@ test("file download operations2", async () => {
     data: "File not found",
   })
 })
+
+test("file delete operations", async () => {
+  const { axios } = await getTestServer()
+
+  const createResPath = await axios.post("/files/upsert", {
+    file_path: "/delete-by-path.txt",
+    text_content: "Delete me by path",
+  })
+  const filePathToDelete = createResPath.data.file.file_path
+
+  const deleteResPath = await axios.delete("/files/delete", {
+    data: { file_path: filePathToDelete, initiator: "test-path-delete" },
+  })
+  expect(deleteResPath.status).toBe(204)
+
+  let listRes = await axios.get("/files/list")
+  expect(
+    listRes.data.file_list.find((f: any) => f.file_path === filePathToDelete),
+  ).toBeUndefined()
+
+  let eventsRes = await axios.get("/events/list")
+  const deleteEventPath = eventsRes.data.event_list.find(
+    (e: any) =>
+      e.event_type === "FILE_DELETED" && e.file_path === filePathToDelete,
+  )
+  expect(deleteEventPath).toBeDefined()
+  expect(deleteEventPath.initiator).toBe("test-path-delete")
+
+  const createResId = await axios.post("/files/upsert", {
+    file_path: "/delete-by-id.txt",
+    text_content: "Delete me by id",
+  })
+  const fileIdToDelete = createResId.data.file.file_id
+  const filePathById = createResId.data.file.file_path
+
+  const deleteResId = await axios.delete("/files/delete", {
+    data: { file_id: fileIdToDelete },
+  })
+  expect(deleteResId.status).toBe(204)
+
+  listRes = await axios.get("/files/list")
+  expect(
+    listRes.data.file_list.find((f: any) => f.file_id === fileIdToDelete),
+  ).toBeUndefined()
+
+  eventsRes = await axios.get("/events/list")
+  const deleteEventId = eventsRes.data.event_list.find(
+    (e: any) => e.event_type === "FILE_DELETED" && e.file_id === fileIdToDelete,
+  )
+  expect(deleteEventId).toBeDefined()
+  expect(deleteEventId.file_path).toBe(filePathById)
+
+  expect(
+    axios.delete("/files/delete", {
+      data: { file_path: "/non-existent-path.txt" },
+    }),
+  ).rejects.toMatchObject({
+    status: 404,
+    data: { error: "File not found" },
+  })
+
+  expect(
+    axios.delete("/files/delete", {
+      data: { file_id: "non-existent-id" },
+    }),
+  ).rejects.toMatchObject({
+    status: 404,
+    data: { error: "File not found" },
+  })
+
+  expect(axios.delete("/files/delete", { data: {} })).rejects.toMatchObject({
+    status: 400,
+  })
+})
