@@ -14,7 +14,17 @@ export default withRouteSpec({
     }),
   jsonResponse: z.union([z.null(), z.object({ error: z.string() })]),
 })(async (req, ctx) => {
-  const { file_id, file_path, initiator } = req.jsonBody
+  const body = await req.json()
+  const file_id = body?.file_id
+  const file_path = body?.file_path
+  const initiator = body?.initiator
+
+  if (!file_id && !file_path) {
+    return ctx.json(
+      { error: "Either file_id or file_path must be provided" },
+      { status: 400 },
+    )
+  }
 
   const deletedFile = ctx.db.deleteFile({ file_id, file_path }, { initiator })
 

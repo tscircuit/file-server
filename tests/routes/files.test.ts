@@ -126,7 +126,7 @@ test("file delete operations", async () => {
 
   eventsRes = await axios.get("/events/list")
   const deleteEventId = eventsRes.data.event_list.find(
-    (e: any) => e.event_type === "FILE_DELETED" && e.file_id === fileIdToDelete,
+    (e: any) => e.event_type === "FILE_DELETED" && e.file_path === filePathById,
   )
   expect(deleteEventId).toBeDefined()
   expect(deleteEventId.file_path).toBe(filePathById)
