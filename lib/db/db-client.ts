@@ -59,6 +59,47 @@ const initializer = combine(databaseSchema.parse({}), (set, get) => ({
     )
   },
 
+  deleteFile: (
+    query: { file_id?: string; file_path?: string },
+    opts: { initiator?: string },
+  ) => {
+    let deletedFile: File | undefined
+    set((state) => {
+      const initialLength = state.files.length
+      const files = state.files.filter((f) => {
+        const match =
+          (query.file_id && f.file_id === query.file_id) ||
+          (query.file_path && f.file_path === query.file_path)
+        if (match) {
+          deletedFile = f
+        }
+        return !match
+      })
+
+      if (files.length === initialLength) {
+        // No file was deleted
+        return state
+      }
+
+      return {
+        ...state,
+        files,
+      }
+    })
+
+    if (deletedFile) {
+      // @ts-ignore
+      get().createEvent({
+        event_type: "FILE_DELETED",
+        file_path: deletedFile.file_path,
+        created_at: new Date().toISOString(),
+        initiator: opts.initiator,
+      })
+    }
+
+    return deletedFile
+  },
+
   createEvent: (event: Omit<FileServerEvent, "event_id">) => {
     set((state) => ({
       events: [

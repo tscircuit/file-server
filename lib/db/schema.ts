@@ -10,7 +10,7 @@ export type File = z.infer<typeof fileSchema>
 
 export const eventSchema = z.object({
   event_id: z.string(),
-  event_type: z.literal("FILE_UPDATED"),
+  event_type: z.union([z.literal("FILE_UPDATED"), z.literal("FILE_DELETED")]),
   file_path: z.string(),
   created_at: z.string(),
 })
