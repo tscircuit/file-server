@@ -89,8 +89,9 @@ test("file delete operations", async () => {
   })
   const filePathToDelete = createResPath.data.file.file_path
 
-  const deleteResPath = await axios.delete("/files/delete", {
-    data: { file_path: filePathToDelete, initiator: "test-path-delete" },
+  const deleteResPath = await axios.post("/files/delete", {
+    file_path: filePathToDelete,
+    initiator: "test-path-delete",
   })
   expect(deleteResPath.status).toBe(204)
 
@@ -114,8 +115,8 @@ test("file delete operations", async () => {
   const fileIdToDelete = createResId.data.file.file_id
   const filePathById = createResId.data.file.file_path
 
-  const deleteResId = await axios.delete("/files/delete", {
-    data: { file_id: fileIdToDelete },
+  const deleteResId = await axios.post("/files/delete", {
+    file_id: fileIdToDelete,
   })
   expect(deleteResId.status).toBe(204)
 
@@ -133,7 +134,9 @@ test("file delete operations", async () => {
 
   expect(
     axios.delete("/files/delete", {
-      data: { file_path: "/non-existent-path.txt" },
+      data: {
+        file_path: "/non-existent-path.txt",
+      },
     }),
   ).rejects.toMatchObject({
     status: 404,
@@ -141,8 +144,8 @@ test("file delete operations", async () => {
   })
 
   expect(
-    axios.delete("/files/delete", {
-      data: { file_id: "non-existent-id" },
+    axios.post("/files/delete", {
+      file_id: "non-existent-id",
     }),
   ).rejects.toMatchObject({
     status: 404,
