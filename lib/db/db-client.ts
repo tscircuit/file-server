@@ -2,17 +2,7 @@ import { createStore } from "zustand/vanilla"
 import { hoist } from "zustand-hoist"
 import { combine } from "zustand/middleware"
 import { databaseSchema, type File, type FileServerEvent } from "./schema.ts"
-
-// Utility to normalize file paths
-function normalizePath(path: string): string {
-  if (!path) return "/"
-  // Remove duplicate slashes, ensure leading slash, remove trailing slash (except root)
-  let normalized = path.replace(/\\+/g, "/").replace(/\/+/g, "/")
-  if (!normalized.startsWith("/")) normalized = "/" + normalized
-  if (normalized.length > 1 && normalized.endsWith("/"))
-    normalized = normalized.slice(0, -1)
-  return normalized
-}
+import { normalizePath } from "../utils/normalize-path"
 
 export const createDatabase = () => {
   return hoist(createStore(initializer))
@@ -40,14 +30,16 @@ const initializer = combine(databaseSchema.parse({}), (set, get) => ({
             : new Date().toISOString(),
       }
 
-      const files =
-        existingFileIndex >= 0
-          ? [
-              ...state.files.slice(0, existingFileIndex),
-              newFile,
-              ...state.files.slice(existingFileIndex + 1),
-            ]
-          : [...state.files, newFile]
+      let files
+      if (existingFileIndex >= 0) {
+        files = [
+          ...state.files.slice(0, existingFileIndex),
+          newFile,
+          ...state.files.slice(existingFileIndex + 1),
+        ]
+      } else {
+        files = [...state.files, newFile]
+      }
 
       return {
         files,
