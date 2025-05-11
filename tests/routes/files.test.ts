@@ -156,3 +156,74 @@ test("file delete operations", async () => {
     status: 400,
   })
 })
+
+test("file rename operations", async () => {
+  const { axios } = await getTestServer()
+
+  // Create initial file
+  const createRes = await axios.post("/files/upsert", {
+    file_path: "/original.txt",
+    text_content: "Original content",
+  })
+  const originalFile = createRes.data.file
+
+  // Rename the file
+  const renameRes = await axios.post("/files/rename", {
+    old_file_path: "/original.txt",
+    new_file_path: "/renamed.txt",
+    initiator: "test-rename",
+  })
+  expect(renameRes.status).toBe(200)
+  expect(renameRes.data.file.file_path).toBe("/renamed.txt")
+  expect(renameRes.data.file.text_content).toBe("Original content")
+  expect(renameRes.data.file.file_id).toBe(originalFile.file_id)
+
+  // Verify old path no longer exists
+  const getOldRes = await axios.get("/files/get", {
+    params: { file_path: "/original.txt" },
+  })
+  expect(getOldRes.data.file).toBeNull()
+
+  // Verify new path exists with correct content
+  const getNewRes = await axios.get("/files/get", {
+    params: { file_path: "/renamed.txt" },
+  })
+  expect(getNewRes.data.file.text_content).toBe("Original content")
+
+  // Check events
+  const eventsRes = await axios.get("/events/list")
+  const renameEvent = eventsRes.data.event_list.find(
+    (e: any) =>
+      e.event_type === "FILE_UPDATED" && e.file_path === "/renamed.txt",
+  )
+  expect(renameEvent).toBeDefined()
+  expect(renameEvent.initiator).toBe("test-rename")
+
+  // Test error cases
+  // Try to rename non-existent file
+  await expect(
+    axios.post("/files/rename", {
+      old_file_path: "/non-existent.txt",
+      new_file_path: "/new.txt",
+    }),
+  ).rejects.toMatchObject({
+    status: 404,
+    data: { file: null },
+  })
+
+  // Try to rename to existing file
+  await axios.post("/files/upsert", {
+    file_path: "/existing.txt",
+    text_content: "Existing file",
+  })
+
+  await expect(
+    axios.post("/files/rename", {
+      old_file_path: "/renamed.txt",
+      new_file_path: "/existing.txt",
+    }),
+  ).rejects.toMatchObject({
+    status: 409,
+    data: { file: null },
+  })
+})

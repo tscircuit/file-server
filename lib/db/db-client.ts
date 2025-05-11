@@ -59,6 +59,52 @@ const initializer = combine(databaseSchema.parse({}), (set, get) => ({
     )
   },
 
+  getFileByPath: (file_path: string) => {
+    const state = get()
+    return state.files.find((f) => f.file_path === file_path)
+  },
+
+  renameFile: (
+    old_file_path: string,
+    new_file_path: string,
+    opts: { initiator?: string },
+  ) => {
+    let renamedFile: File | undefined
+    set((state) => {
+      const fileIndex = state.files.findIndex(
+        (f) => f.file_path === old_file_path,
+      )
+      if (fileIndex === -1) return state
+
+      const file = state.files[fileIndex]
+      renamedFile = {
+        ...file,
+        file_path: new_file_path,
+      }
+
+      const files = state.files.map((f, i) =>
+        i === fileIndex ? renamedFile! : f,
+      )
+
+      return {
+        ...state,
+        files,
+      }
+    })
+
+    if (renamedFile) {
+      // @ts-ignore
+      get().createEvent({
+        event_type: "FILE_UPDATED",
+        file_path: new_file_path,
+        created_at: new Date().toISOString(),
+        initiator: opts.initiator,
+      })
+    }
+
+    return renamedFile
+  },
+
   deleteFile: (
     query: { file_id?: string; file_path?: string },
     opts: { initiator?: string },
