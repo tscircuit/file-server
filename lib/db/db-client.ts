@@ -3,6 +3,17 @@ import { hoist } from "zustand-hoist"
 import { combine } from "zustand/middleware"
 import { databaseSchema, type File, type FileServerEvent } from "./schema.ts"
 
+// Utility to normalize file paths
+function normalizePath(path: string): string {
+  if (!path) return "/"
+  // Remove duplicate slashes, ensure leading slash, remove trailing slash (except root)
+  let normalized = path.replace(/\\+/g, "/").replace(/\/+/g, "/")
+  if (!normalized.startsWith("/")) normalized = "/" + normalized
+  if (normalized.length > 1 && normalized.endsWith("/"))
+    normalized = normalized.slice(0, -1)
+  return normalized
+}
+
 export const createDatabase = () => {
   return hoist(createStore(initializer))
 }
@@ -11,12 +22,14 @@ export type DbClient = ReturnType<typeof createDatabase>
 
 const initializer = combine(databaseSchema.parse({}), (set, get) => ({
   upsertFile: (file: Omit<File, "file_id">, opts: { initiator?: string }) => {
+    const file_path = normalizePath(file.file_path)
     set((state) => {
       const existingFileIndex = state.files.findIndex(
-        (f) => f.file_path === file.file_path,
+        (f) => normalizePath(f.file_path) === file_path,
       )
       const newFile = {
         ...file,
+        file_path,
         file_id:
           existingFileIndex >= 0
             ? state.files[existingFileIndex].file_id
@@ -29,7 +42,11 @@ const initializer = combine(databaseSchema.parse({}), (set, get) => ({
 
       const files =
         existingFileIndex >= 0
-          ? state.files.map((f, i) => (i === existingFileIndex ? newFile : f))
+          ? [
+              ...state.files.slice(0, existingFileIndex),
+              newFile,
+              ...state.files.slice(existingFileIndex + 1),
+            ]
           : [...state.files, newFile]
 
       return {
@@ -42,12 +59,12 @@ const initializer = combine(databaseSchema.parse({}), (set, get) => ({
     // @ts-ignore
     get().createEvent({
       event_type: "FILE_UPDATED",
-      file_path: file.file_path,
+      file_path,
       created_at: new Date().toISOString(),
       initiator: opts.initiator,
     })
 
-    return get().files.find((f) => f.file_path === file.file_path)!
+    return get().files.find((f) => normalizePath(f.file_path) === file_path)!
   },
 
   getFile: (query: { file_id?: string; file_path?: string }) => {
@@ -55,13 +72,15 @@ const initializer = combine(databaseSchema.parse({}), (set, get) => ({
     return state.files.find(
       (f) =>
         (query.file_id && f.file_id === query.file_id) ||
-        (query.file_path && f.file_path === query.file_path),
+        (query.file_path &&
+          normalizePath(f.file_path) === normalizePath(query.file_path!)),
     )
   },
 
   getFileByPath: (file_path: string) => {
     const state = get()
-    return state.files.find((f) => f.file_path === file_path)
+    const norm = normalizePath(file_path)
+    return state.files.find((f) => normalizePath(f.file_path) === norm)
   },
 
   renameFile: (
@@ -70,37 +89,49 @@ const initializer = combine(databaseSchema.parse({}), (set, get) => ({
     opts: { initiator?: string },
   ) => {
     let renamedFile: File | undefined
+    const normOld = normalizePath(old_file_path)
+    const normNew = normalizePath(new_file_path)
     set((state) => {
       const fileIndex = state.files.findIndex(
-        (f) => f.file_path === old_file_path,
+        (f) => normalizePath(f.file_path) === normOld,
       )
       if (fileIndex === -1) return state
 
       const file = state.files[fileIndex]
       renamedFile = {
         ...file,
-        file_path: new_file_path,
+        file_path: normNew,
       }
 
-      const files = state.files.map((f, i) =>
-        i === fileIndex ? renamedFile! : f,
-      )
+      const files = [
+        ...state.files.slice(0, fileIndex),
+        renamedFile,
+        ...state.files.slice(fileIndex + 1),
+      ]
 
-      return {
-        ...state,
-        files,
-      }
-    })
-
-    if (renamedFile) {
-      // @ts-ignore
-      get().createEvent({
-        event_type: "FILE_UPDATED",
-        file_path: new_file_path,
+      // Emit FILE_CREATED for new path
+      state.events.push({
+        event_id: (state.idCounter + 0).toString(),
+        event_type: "FILE_CREATED",
+        file_path: normNew,
         created_at: new Date().toISOString(),
         initiator: opts.initiator,
       })
-    }
+      // Emit FILE_DELETED for old path
+      state.events.push({
+        event_id: (state.idCounter + 1).toString(),
+        event_type: "FILE_DELETED",
+        file_path: normOld,
+        created_at: new Date().toISOString(),
+        initiator: opts.initiator,
+      })
+
+      return {
+        files,
+        events: state.events,
+        idCounter: state.idCounter + 2,
+      }
+    })
 
     return renamedFile
   },
@@ -115,7 +146,8 @@ const initializer = combine(databaseSchema.parse({}), (set, get) => ({
       const files = state.files.filter((f) => {
         const match =
           (query.file_id && f.file_id === query.file_id) ||
-          (query.file_path && f.file_path === query.file_path)
+          (query.file_path &&
+            normalizePath(f.file_path) === normalizePath(query.file_path!))
         if (match) {
           deletedFile = f
         }
@@ -128,7 +160,6 @@ const initializer = combine(databaseSchema.parse({}), (set, get) => ({
       }
 
       return {
-        ...state,
         files,
       }
     })
@@ -137,7 +168,7 @@ const initializer = combine(databaseSchema.parse({}), (set, get) => ({
       // @ts-ignore
       get().createEvent({
         event_type: "FILE_DELETED",
-        file_path: deletedFile.file_path,
+        file_path: normalizePath(deletedFile.file_path),
         created_at: new Date().toISOString(),
         initiator: opts.initiator,
       })

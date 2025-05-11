@@ -160,14 +160,12 @@ test("file delete operations", async () => {
 test("file rename operations", async () => {
   const { axios } = await getTestServer()
 
-  // Create initial file
   const createRes = await axios.post("/files/upsert", {
     file_path: "/original.txt",
     text_content: "Original content",
   })
   const originalFile = createRes.data.file
 
-  // Rename the file
   const renameRes = await axios.post("/files/rename", {
     old_file_path: "/original.txt",
     new_file_path: "/renamed.txt",
@@ -178,26 +176,30 @@ test("file rename operations", async () => {
   expect(renameRes.data.file.text_content).toBe("Original content")
   expect(renameRes.data.file.file_id).toBe(originalFile.file_id)
 
-  // Verify old path no longer exists
   const getOldRes = await axios.get("/files/get", {
     params: { file_path: "/original.txt" },
   })
   expect(getOldRes.data.file).toBeNull()
 
-  // Verify new path exists with correct content
   const getNewRes = await axios.get("/files/get", {
     params: { file_path: "/renamed.txt" },
   })
   expect(getNewRes.data.file.text_content).toBe("Original content")
 
-  // Check events
   const eventsRes = await axios.get("/events/list")
-  const renameEvent = eventsRes.data.event_list.find(
+  const createdEvent = eventsRes.data.event_list.find(
     (e: any) =>
-      e.event_type === "FILE_UPDATED" && e.file_path === "/renamed.txt",
+      e.event_type === "FILE_CREATED" && e.file_path === "/renamed.txt",
   )
-  expect(renameEvent).toBeDefined()
-  expect(renameEvent.initiator).toBe("test-rename")
+  expect(createdEvent).toBeDefined()
+  expect(createdEvent.initiator).toBe("test-rename")
+
+  const deletedEvent = eventsRes.data.event_list.find(
+    (e: any) =>
+      e.event_type === "FILE_DELETED" && e.file_path === "/original.txt",
+  )
+  expect(deletedEvent).toBeDefined()
+  expect(deletedEvent.initiator).toBe("test-rename")
 
   // Test error cases
   // Try to rename non-existent file
