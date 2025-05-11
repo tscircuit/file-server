@@ -9,7 +9,7 @@ test("file operations", async () => {
     file_path: "/test.txt",
     text_content: "Hello World",
   })
-  expect(createRes.data.file.file_path).toBe("/test.txt")
+  expect(createRes.data.file.file_path).toBe("test.txt")
   expect(createRes.data.file.text_content).toBe("Hello World")
 
   // Get the file
@@ -21,13 +21,13 @@ test("file operations", async () => {
   // List files
   const listRes = await axios.get("/files/list")
   expect(listRes.data.file_list).toHaveLength(1)
-  expect(listRes.data.file_list[0].file_path).toBe("/test.txt")
+  expect(listRes.data.file_list[0].file_path).toBe("test.txt")
 
   // Check events
   const eventsRes = await axios.get("/events/list")
   expect(eventsRes.data.event_list).toHaveLength(1)
   expect(eventsRes.data.event_list[0].event_type).toBe("FILE_UPDATED")
-  expect(eventsRes.data.event_list[0].file_path).toBe("/test.txt")
+  expect(eventsRes.data.event_list[0].file_path).toBe("test.txt")
 })
 
 test("file download operations", async () => {
@@ -172,7 +172,7 @@ test("file rename operations", async () => {
     initiator: "test-rename",
   })
   expect(renameRes.status).toBe(200)
-  expect(renameRes.data.file.file_path).toBe("/renamed.txt")
+  expect(renameRes.data.file.file_path).toBe("renamed.txt")
   expect(renameRes.data.file.text_content).toBe("Original content")
   expect(renameRes.data.file.file_id).toBe(originalFile.file_id)
 
@@ -189,14 +189,14 @@ test("file rename operations", async () => {
   const eventsRes = await axios.get("/events/list")
   const createdEvent = eventsRes.data.event_list.find(
     (e: any) =>
-      e.event_type === "FILE_CREATED" && e.file_path === "/renamed.txt",
+      e.event_type === "FILE_CREATED" && e.file_path === "renamed.txt",
   )
   expect(createdEvent).toBeDefined()
   expect(createdEvent.initiator).toBe("test-rename")
 
   const deletedEvent = eventsRes.data.event_list.find(
     (e: any) =>
-      e.event_type === "FILE_DELETED" && e.file_path === "/original.txt",
+      e.event_type === "FILE_DELETED" && e.file_path === "original.txt",
   )
   expect(deletedEvent).toBeDefined()
   expect(deletedEvent.initiator).toBe("test-rename")
