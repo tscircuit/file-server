@@ -38,7 +38,9 @@ export default withRouteSpec({
 
   const senderHost = req.headers.get("X-Sender-Host")
   if (senderHost) {
-    headers.set("Host", senderHost)
+    const hostValue = senderHost.replace(/^https?:\/\//, "")
+    headers.set("Host", hostValue)
+    headers.set("authority", hostValue)
   }
 
   // Add support for X-Sender-Referer
