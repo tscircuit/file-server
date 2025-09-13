@@ -37,6 +37,11 @@ export default withRouteSpec({
           <p><span class="label">File Path:</span> ${file.file_path}</p>
           <p><span class="label">Created At:</span> ${file.created_at}</p>
         </div>
+        <h2>Links:</h2>
+        <ul>
+          <li><a href="../../files/download?file_path=/${file.file_path}">Download File</a></li>
+          <li><a href="../../files/static/${file.file_path}">Static Route</a></li>
+        </ul>
         <h2>Content:</h2>
         <pre>${(file.text_content ?? "[binary content]")
           .replace(/&/g, "&amp;")
