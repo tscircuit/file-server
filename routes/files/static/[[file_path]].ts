@@ -1,5 +1,6 @@
 import { withRouteSpec } from "lib/middleware/with-winter-spec"
 import { z } from "zod"
+import { Buffer } from "node:buffer"
 
 const getMimeType = (filePath: string): string => {
   const ext = filePath.split(".").pop()?.toLowerCase()
@@ -60,8 +61,10 @@ export default withRouteSpec({
   }
 
   const mimeType = getMimeType(file.file_path)
+  const body =
+    file.text_content ?? Buffer.from(file.binary_content_b64!, "base64")
 
-  return new Response(file.text_content, {
+  return new Response(body, {
     headers: {
       "Content-Type": mimeType,
     },

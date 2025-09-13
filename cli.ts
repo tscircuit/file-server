@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { startServer } from "winterspec/adapters/node"
+// @ts-ignore - bundle is generated at build time
 import winterspecBundle from "./dist/bundle"
 
 const port = process.env.PORT ? Number.parseInt(process.env.PORT) : 3062
