@@ -229,3 +229,38 @@ test("file rename operations", async () => {
     data: { file: null },
   })
 })
+
+test("file static serving operations", async () => {
+  const { axios } = await getTestServer()
+
+  // Test different file types with their MIME types
+  const testFiles = [
+    { path: "/test.html", content: "<html><body>Test</body></html>", expectedMime: "text/html" },
+    { path: "/test.css", content: "body { color: red; }", expectedMime: "text/css" },
+    { path: "/test.js", content: "console.log('test');", expectedMime: "text/javascript" },
+    { path: "/test.json", content: '{"test": true}', expectedMime: "application/json" },
+    { path: "/test.png", content: "fake png content", expectedMime: "image/png" },
+    { path: "/test.jpg", content: "fake jpg content", expectedMime: "image/jpeg" },
+    { path: "/test.unknown", content: "unknown file type", expectedMime: "application/octet-stream" },
+  ]
+
+  for (const file of testFiles) {
+    await axios.post("/files/upsert", {
+      file_path: file.path,
+      text_content: file.content,
+    })
+
+    const staticRes = await axios.get(`/files/static${file.path}`)
+    expect(staticRes.status).toBe(200)
+    expect(staticRes.data).toBe(file.content)
+    expect(staticRes.headers.get("content-type")).toBe(file.expectedMime)
+    // Should NOT have attachment disposition (unlike download route)
+    expect(staticRes.headers.get("content-disposition")).toBeNull()
+  }
+
+  // Test 404 for missing file
+  expect(axios.get("/files/static/missing-file.txt")).rejects.toMatchObject({
+    status: 404,
+    data: "File not found",
+  })
+})
