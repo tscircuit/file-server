@@ -235,13 +235,41 @@ test("file static serving operations", async () => {
 
   // Test different file types with their MIME types
   const testFiles = [
-    { path: "/test.html", content: "<html><body>Test</body></html>", expectedMime: "text/html" },
-    { path: "/test.css", content: "body { color: red; }", expectedMime: "text/css" },
-    { path: "/test.js", content: "console.log('test');", expectedMime: "text/javascript" },
-    { path: "/test.json", content: '{"test": true}', expectedMime: "application/json" },
-    { path: "/test.png", content: "fake png content", expectedMime: "image/png" },
-    { path: "/test.jpg", content: "fake jpg content", expectedMime: "image/jpeg" },
-    { path: "/test.unknown", content: "unknown file type", expectedMime: "application/octet-stream" },
+    {
+      path: "/test.html",
+      content: "<html><body>Test</body></html>",
+      expectedMime: "text/html",
+    },
+    {
+      path: "/test.css",
+      content: "body { color: red; }",
+      expectedMime: "text/css",
+    },
+    {
+      path: "/test.js",
+      content: "console.log('test');",
+      expectedMime: "text/javascript",
+    },
+    {
+      path: "/test.json",
+      content: '{"test": true}',
+      expectedMime: "application/json",
+    },
+    {
+      path: "/test.png",
+      content: "fake png content",
+      expectedMime: "image/png",
+    },
+    {
+      path: "/test.jpg",
+      content: "fake jpg content",
+      expectedMime: "image/jpeg",
+    },
+    {
+      path: "/test.unknown",
+      content: "unknown file type",
+      expectedMime: "application/octet-stream",
+    },
   ]
 
   for (const file of testFiles) {
@@ -252,7 +280,14 @@ test("file static serving operations", async () => {
 
     const staticRes = await axios.get(`/files/static${file.path}`)
     expect(staticRes.status).toBe(200)
-    expect(staticRes.data).toBe(file.content)
+
+    // For JSON files, axios parses the response, so compare the parsed object
+    if (file.expectedMime === "application/json") {
+      expect(staticRes.data).toEqual(JSON.parse(file.content))
+    } else {
+      expect(staticRes.data).toBe(file.content)
+    }
+
     expect(staticRes.headers.get("content-type")).toBe(file.expectedMime)
     // Should NOT have attachment disposition (unlike download route)
     expect(staticRes.headers.get("content-disposition")).toBeNull()
