@@ -12,7 +12,8 @@ export default withRouteSpec({
       .object({
         file_id: z.string(),
         file_path: z.string(),
-        text_content: z.string(),
+        text_content: z.string().optional(),
+        binary_content_b64: z.string().optional(),
         created_at: z.string(),
       })
       .nullable(),

@@ -1,5 +1,6 @@
 import { test, expect } from "bun:test"
 import { getTestServer } from "tests/fixtures/get-test-server"
+import { Buffer } from "node:buffer"
 
 test("file operations", async () => {
   const { axios } = await getTestServer()
@@ -28,6 +29,34 @@ test("file operations", async () => {
   expect(eventsRes.data.event_list).toHaveLength(1)
   expect(eventsRes.data.event_list[0].event_type).toBe("FILE_UPDATED")
   expect(eventsRes.data.event_list[0].file_path).toBe("test.txt")
+})
+
+test("binary file operations", async () => {
+  const { axios } = await getTestServer()
+
+  const buffer = Buffer.from([0, 1, 2, 3])
+  const base64 = buffer.toString("base64")
+
+  const createRes = await axios.post("/files/upsert", {
+    file_path: "/bin.dat",
+    binary_content_b64: base64,
+  })
+  expect(createRes.data.file.binary_content_b64).toBe(base64)
+
+  const getRes = await axios.get("/files/get", {
+    params: { file_path: "/bin.dat" },
+  })
+  expect(getRes.data.file.binary_content_b64).toBe(base64)
+
+  const downloadRes = await axios.get("/files/download", {
+    params: { file_path: "/bin.dat" },
+    responseType: "arrayBuffer",
+  })
+  expect(downloadRes.status).toBe(200)
+  expect(Buffer.from(downloadRes.data)).toEqual(buffer)
+  expect(downloadRes.headers.get("content-type")).toBe(
+    "application/octet-stream",
+  )
 })
 
 test("file download operations", async () => {

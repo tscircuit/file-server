@@ -1,5 +1,6 @@
 import { withRouteSpec } from "lib/middleware/with-winter-spec"
 import { z } from "zod"
+import { Buffer } from "node:buffer"
 
 export default withRouteSpec({
   methods: ["GET"],
@@ -14,10 +15,17 @@ export default withRouteSpec({
     return new Response("File not found", { status: 404 })
   }
 
-  return new Response(file.text_content, {
+  const isText = file.text_content !== undefined
+  const body = isText
+    ? file.text_content
+    : Buffer.from(file.binary_content_b64!, "base64")
+
+  return new Response(body, {
     headers: {
-      "Content-Type": "text/plain",
-      "Content-Disposition": `attachment; filename="${file.file_path.split("/").pop()}"`,
+      "Content-Type": isText ? "text/plain" : "application/octet-stream",
+      "Content-Disposition": `attachment; filename="${file.file_path
+        .split("/")
+        .pop()}"`,
     },
   })
 })

@@ -46,7 +46,7 @@ Content-Type: application/json
 {
   "file_id": "optional-id",
   "file_path": "path/to/file.txt",
-  "text_content": "File contents here"
+  "text_content": "File contents here" // or use "binary_content_b64": "..."
 }
 
 Response: {
@@ -58,6 +58,11 @@ Response: {
   }
 }
 ```
+
+The returned file will contain either `text_content` or `binary_content_b64`.
+
+Provide either `text_content` for text files or `binary_content_b64` for
+binary data. The response will include whichever field was supplied.
 
 #### Get File
 
