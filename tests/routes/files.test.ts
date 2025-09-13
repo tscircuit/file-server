@@ -299,6 +299,11 @@ test("file static serving operations", async () => {
       content: "unknown file type",
       expectedMime: "application/octet-stream",
     },
+    {
+      path: "/example-dir2/myObj.obj",
+      content: "fake obj content",
+      expectedMime: "application/octet-stream",
+    },
   ]
 
   for (const file of testFiles) {

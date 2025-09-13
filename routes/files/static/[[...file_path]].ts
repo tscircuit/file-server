@@ -50,11 +50,18 @@ const getMimeType = (filePath: string): string => {
 export default withRouteSpec({
   methods: ["GET"],
   pathParams: z.object({
-    file_path: z.string(),
+    file_path: z.union([z.string(), z.array(z.string())]),
   }),
 })((req, ctx) => {
-  const { file_path } = req.routeParams as { file_path: string }
-  const file = ctx.db.getFile({ file_path: `/${file_path}` })
+  const { file_path } = req.routeParams as {
+    file_path: string | string[]
+  }
+
+  const joinedFilePath = Array.isArray(file_path)
+    ? file_path.join("/")
+    : file_path
+
+  const file = ctx.db.getFile({ file_path: `/${joinedFilePath}` })
 
   if (!file) {
     return new Response("File not found", { status: 404 })
