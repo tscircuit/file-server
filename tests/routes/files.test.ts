@@ -260,10 +260,15 @@ test("file rename operations", async () => {
 })
 
 test("file static serving operations", async () => {
-  const { axios } = await getTestServer()
+  const { axios, url } = await getTestServer()
 
   // Test different file types with their MIME types
-  const testFiles = [
+  const testFiles: Array<{
+    path: string
+    expectedMime: string
+    content?: string
+    binaryContent?: Buffer
+  }> = [
     {
       path: "/test.html",
       content: "<html><body>Test</body></html>",
@@ -304,27 +309,55 @@ test("file static serving operations", async () => {
       content: "fake obj content",
       expectedMime: "application/octet-stream",
     },
+    {
+      path: "/models/test.glb",
+      binaryContent: Buffer.from([
+        0x67, 0x6c, 0x54, 0x46, 0x02, 0x00, 0x00, 0x00,
+      ]),
+      expectedMime: "model/gltf-binary",
+    },
   ]
 
   for (const file of testFiles) {
-    await axios.post("/files/upsert", {
-      file_path: file.path,
-      text_content: file.content,
-    })
-
-    const staticRes = await axios.get(`/files/static${file.path}`)
-    expect(staticRes.status).toBe(200)
-
-    // For JSON files, axios parses the response, so compare the parsed object
-    if (file.expectedMime === "application/json") {
-      expect(staticRes.data).toEqual(JSON.parse(file.content))
+    if (file.binaryContent) {
+      await axios.post("/files/upsert", {
+        file_path: file.path,
+        binary_content_b64: file.binaryContent.toString("base64"),
+      })
     } else {
-      expect(staticRes.data).toBe(file.content)
+      await axios.post("/files/upsert", {
+        file_path: file.path,
+        text_content: file.content,
+      })
     }
 
-    expect(staticRes.headers.get("content-type")).toBe(file.expectedMime)
+    if (file.binaryContent) {
+      const response = await fetch(`${url}/files/static${file.path}`)
+      expect(response.status).toBe(200)
+      const arrayBuffer = await response.arrayBuffer()
+      const responseBytes = new Uint8Array(arrayBuffer)
+      const expectedBytes = new Uint8Array(file.binaryContent)
+      expect(Array.from(responseBytes)).toEqual(Array.from(expectedBytes))
+      expect(response.headers.get("content-type")).toBe(file.expectedMime)
+      // Should NOT have attachment disposition (unlike download route)
+      expect(response.headers.get("content-disposition")).toBeNull()
+      continue
+    }
+
+    const response = await axios.get(`/files/static${file.path}`)
+
+    expect(response.status).toBe(200)
+
+    if (file.expectedMime === "application/json") {
+      // For JSON files, axios parses the response, so compare the parsed object
+      expect(response.data).toEqual(JSON.parse(file.content!))
+    } else {
+      expect(response.data).toBe(file.content)
+    }
+
+    expect(response.headers.get("content-type")).toBe(file.expectedMime)
     // Should NOT have attachment disposition (unlike download route)
-    expect(staticRes.headers.get("content-disposition")).toBeNull()
+    expect(response.headers.get("content-disposition")).toBeNull()
   }
 
   // Test 404 for missing file

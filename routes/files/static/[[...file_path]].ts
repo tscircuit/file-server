@@ -24,6 +24,9 @@ const getMimeType = (filePath: string): string => {
     webp: "image/webp",
     ico: "image/x-icon",
 
+    // 3D models
+    glb: "model/gltf-binary",
+
     // Audio
     mp3: "audio/mpeg",
     wav: "audio/wav",
