@@ -34,7 +34,7 @@ test("file operations", async () => {
 test("binary file operations", async () => {
   const { axios } = await getTestServer()
 
-  const buffer = Buffer.from([0, 1, 2, 3])
+  const buffer = Buffer.from([0, 1, 2, 3, 128, 255, 200])
   const base64 = buffer.toString("base64")
 
   const createRes = await axios.post("/files/upsert", {
@@ -56,6 +56,9 @@ test("binary file operations", async () => {
   expect(Buffer.from(downloadRes.data)).toEqual(buffer)
   expect(downloadRes.headers.get("content-type")).toBe(
     "application/octet-stream",
+  )
+  expect(downloadRes.headers.get("content-length")).toBe(
+    buffer.length.toString(),
   )
 })
 
@@ -312,7 +315,30 @@ test("file static serving operations", async () => {
     {
       path: "/models/test.glb",
       binaryContent: Buffer.from([
-        0x67, 0x6c, 0x54, 0x46, 0x02, 0x00, 0x00, 0x00,
+        0x67,
+        0x6c,
+        0x54,
+        0x46, // "glTF" magic
+        0x02,
+        0x00,
+        0x00,
+        0x00, // version 2
+        0x1c,
+        0x00,
+        0x00,
+        0x00, // total length
+        0x4e,
+        0x4f,
+        0x44,
+        0x45, // chunk type "NODE"
+        0x00,
+        0x00,
+        0x00,
+        0x00, // placeholder chunk data
+        0x80,
+        0xff,
+        0xfe,
+        0xfd, // bytes with high bits set
       ]),
       expectedMime: "model/gltf-binary",
     },
@@ -341,6 +367,9 @@ test("file static serving operations", async () => {
       expect(response.headers.get("content-type")).toBe(file.expectedMime)
       // Should NOT have attachment disposition (unlike download route)
       expect(response.headers.get("content-disposition")).toBeNull()
+      expect(response.headers.get("content-length")).toBe(
+        file.binaryContent.byteLength.toString(),
+      )
       continue
     }
 
