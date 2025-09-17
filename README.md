@@ -64,6 +64,34 @@ The returned file will contain either `text_content` or `binary_content_b64`.
 Provide either `text_content` for text files or `binary_content_b64` for
 binary data. The response will include whichever field was supplied.
 
+#### Add Binary Files
+
+To upload binary assets (for example, images or compiled artifacts) encode the
+file contents as Base64 and provide them via the `binary_content_b64` field.
+
+```http
+POST /files/upsert
+Content-Type: application/json
+
+{
+  "file_path": "assets/logo.png",
+  "binary_content_b64": "iVBORw0KGgoAAAANSUhEUgAA..."
+}
+
+Response: {
+  "file": {
+    "file_id": "42",
+    "file_path": "assets/logo.png",
+    "binary_content_b64": "iVBORw0KGgoAAAANSUhEUgAA...",
+    "created_at": "2024-01-01T00:00:00.000Z"
+  }
+}
+```
+
+The server persists the binary payload exactly as provided. When retrieving the
+file with `/files/get`, the same `binary_content_b64` string will be returned
+and can be decoded back to the original bytes in your client code.
+
 #### Get File
 
 ```http
