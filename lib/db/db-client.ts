@@ -180,10 +180,21 @@ const initializer = combine(databaseSchema.parse({}), (set, get) => ({
     return get().events[get().events.length - 1]
   },
 
-  listEvents: (since?: string) => {
+  listEvents: (params?: { since?: string; event_type?: string }) => {
     const state = get()
-    if (!since) return state.events
-    return state.events.filter((e) => e.created_at > since)
+    const { since, event_type } = params ?? {}
+
+    let events = state.events
+
+    if (since) {
+      events = events.filter((e) => e.created_at > since)
+    }
+
+    if (event_type) {
+      events = events.filter((e) => e.event_type === event_type)
+    }
+
+    return events
   },
 
   resetEvents: () => {

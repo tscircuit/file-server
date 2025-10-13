@@ -5,6 +5,7 @@ export default withRouteSpec({
   methods: ["GET"],
   queryParams: z.object({
     since: z.string().optional(),
+    event_type: z.string().optional(),
   }),
   jsonResponse: z.object({
     event_list: z.array(
@@ -19,6 +20,6 @@ export default withRouteSpec({
     ),
   }),
 })((req, ctx) => {
-  const { since } = req.query
-  return ctx.json({ event_list: ctx.db.listEvents(since) })
+  const { since, event_type } = req.query
+  return ctx.json({ event_list: ctx.db.listEvents({ since, event_type }) })
 })

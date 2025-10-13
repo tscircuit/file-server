@@ -153,6 +153,8 @@ Response: {
 GET /events/list
 # or
 GET /events/list?since=2024-01-01T00:00:00.000Z
+# or
+GET /events/list?event_type=FILE_UPDATED
 
 Response: {
   "event_list": [
@@ -165,6 +167,9 @@ Response: {
   ]
 }
 ```
+
+You can optionally combine `since` and `event_type` to narrow the response to
+events of a specific type that were created after a given timestamp.
 
 ### Admin Interface
 
