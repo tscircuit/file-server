@@ -17,6 +17,7 @@ This is a simple file server API, it has the following API:
 /files/upsert - Upsert a file
 
 /events/list?since=... - List events since a given timestamp
+/events/list?event_type=... - List events filtered by event type
 </pre>
 
 

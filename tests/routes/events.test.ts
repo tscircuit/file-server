@@ -27,6 +27,31 @@ test("custom events", async () => {
   expect(createdEvent.success).toBe(true)
 })
 
+test("filter events by event_type", async () => {
+  const { axios } = await getTestServer()
+
+  await axios.post("/events/create", {
+    event_type: "USER_LOGIN",
+    user_id: "123",
+  })
+
+  await axios.post("/events/create", {
+    event_type: "USER_LOGOUT",
+    user_id: "123",
+  })
+
+  const listAllRes = await axios.get("/events/list")
+  expect(listAllRes.data.event_list).toHaveLength(2)
+
+  const filteredRes = await axios.get("/events/list", {
+    params: { event_type: "USER_LOGIN" },
+  })
+
+  expect(filteredRes.data.event_list).toHaveLength(1)
+  expect(filteredRes.data.event_list[0].event_type).toBe("USER_LOGIN")
+  expect(filteredRes.data.event_list[0].user_id).toBe("123")
+})
+
 test("reset events", async () => {
   const { axios } = await getTestServer()
 
