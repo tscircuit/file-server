@@ -63,10 +63,9 @@ async function resolveHttpProxy(
     const response = await fetch(targetUrl)
 
     if (!response.ok) {
-      return new Response(
-        `HTTP proxy returned status ${response.status}`,
-        { status: response.status },
-      )
+      return new Response(`HTTP proxy returned status ${response.status}`, {
+        status: response.status,
+      })
     }
 
     // Pass through the response body and relevant headers

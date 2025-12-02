@@ -82,7 +82,9 @@ test("http proxy binary file", async () => {
   const { axios, url } = await getTestServer()
 
   // Create a binary file on the server
-  const binaryData = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+  const binaryData = new Uint8Array([
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+  ])
   const base64 = Buffer.from(binaryData).toString("base64")
   await axios.post("/files/upsert", {
     file_path: "/binary-source/image.png",

@@ -68,7 +68,10 @@ test("disk proxy with query param download", async () => {
   const tempDir = await mkdtemp(join(tmpdir(), "file-proxy-query-test-"))
 
   try {
-    await writeFile(join(tempDir, "query-test.txt"), "Query param download test")
+    await writeFile(
+      join(tempDir, "query-test.txt"),
+      "Query param download test",
+    )
 
     // Create a disk proxy
     await axios.post("/file_proxies/create", {
@@ -106,9 +109,12 @@ test("disk proxy binary file", async () => {
     })
 
     // Test downloading binary file
-    const downloadRes = await axios.get("/files/download/binary-test/binary.bin", {
-      responseType: "arrayBuffer",
-    })
+    const downloadRes = await axios.get(
+      "/files/download/binary-test/binary.bin",
+      {
+        responseType: "arrayBuffer",
+      },
+    )
     expect(downloadRes.status).toBe(200)
     expect(new Uint8Array(downloadRes.data)).toEqual(binaryData)
     expect(downloadRes.headers.get("content-type")).toBe(

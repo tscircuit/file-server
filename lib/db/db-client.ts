@@ -235,7 +235,8 @@ const initializer = combine(databaseSchema.parse({}), (set, get) => ({
     return state.file_proxies.find(
       (p) =>
         (query.file_proxy_id && p.file_proxy_id === query.file_proxy_id) ||
-        (query.matching_pattern && p.matching_pattern === query.matching_pattern),
+        (query.matching_pattern &&
+          p.matching_pattern === query.matching_pattern),
     )
   },
 
