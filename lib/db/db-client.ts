@@ -1,7 +1,12 @@
 import { createStore } from "zustand/vanilla"
 import { hoist } from "zustand-hoist"
 import { combine } from "zustand/middleware"
-import { databaseSchema, type File, type FileServerEvent } from "./schema.ts"
+import {
+  databaseSchema,
+  type File,
+  type FileProxy,
+  type FileServerEvent,
+} from "./schema.ts"
 import { normalizePath } from "../utils/normalize-path"
 
 export const createDatabase = () => {
@@ -202,5 +207,57 @@ const initializer = combine(databaseSchema.parse({}), (set, get) => ({
       ...state,
       events: [],
     }))
+  },
+
+  createFileProxy: (
+    proxy: Omit<FileProxy, "file_proxy_id" | "created_at">,
+  ): FileProxy => {
+    let newProxy: FileProxy
+    set((state) => {
+      newProxy = {
+        ...proxy,
+        file_proxy_id: state.idCounter.toString(),
+        created_at: new Date().toISOString(),
+      } as FileProxy
+      return {
+        file_proxies: [...state.file_proxies, newProxy],
+        idCounter: state.idCounter + 1,
+      }
+    })
+    return newProxy!
+  },
+
+  getFileProxy: (query: {
+    file_proxy_id?: string
+    matching_pattern?: string
+  }): FileProxy | undefined => {
+    const state = get()
+    return state.file_proxies.find(
+      (p) =>
+        (query.file_proxy_id && p.file_proxy_id === query.file_proxy_id) ||
+        (query.matching_pattern &&
+          p.matching_pattern === query.matching_pattern),
+    )
+  },
+
+  listFileProxies: (): FileProxy[] => {
+    return get().file_proxies
+  },
+
+  matchFileProxy: (file_path: string): FileProxy | undefined => {
+    const state = get()
+    const normalizedPath = normalizePath(file_path)
+
+    for (const proxy of state.file_proxies) {
+      const pattern = proxy.matching_pattern
+      // Pattern format: "prefix/*" - match anything starting with "prefix/"
+      if (pattern.endsWith("/*")) {
+        const prefix = pattern.slice(0, -1) // Remove the "*" to get "prefix/"
+        if (normalizedPath.startsWith(prefix)) {
+          return proxy
+        }
+      }
+    }
+    return undefined
   },
 }))

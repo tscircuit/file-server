@@ -4,6 +4,7 @@ import {
   decodeBase64ToUint8Array,
   uint8ArrayToArrayBuffer,
 } from "lib/utils/decode-base64"
+import { resolveFileProxy } from "lib/utils/resolve-file-proxy"
 
 const getMimeType = (filePath: string): string => {
   const ext = filePath.split(".").pop()?.toLowerCase()
@@ -58,7 +59,7 @@ export default withRouteSpec({
   pathParams: z.object({
     file_path: z.union([z.string(), z.array(z.string())]),
   }),
-})((req, ctx) => {
+})(async (req, ctx) => {
   const { file_path } = req.routeParams as {
     file_path: string | string[]
   }
@@ -67,9 +68,15 @@ export default withRouteSpec({
     ? file_path.join("/")
     : file_path
 
-  const file = ctx.db.getFile({ file_path: `/${joinedFilePath}` })
+  const normalizedPath = `/${joinedFilePath}`
+  const file = ctx.db.getFile({ file_path: normalizedPath })
 
   if (!file) {
+    // Check if there's a matching proxy
+    const proxy = ctx.db.matchFileProxy(normalizedPath)
+    if (proxy) {
+      return resolveFileProxy(proxy, normalizedPath)
+    }
     return new Response("File not found", { status: 404 })
   }
 
