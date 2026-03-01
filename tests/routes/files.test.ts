@@ -112,6 +112,44 @@ test("file download operations2", async () => {
   })
 })
 
+
+test("file download supports query by file_id and nested path URLs", async () => {
+  const { axios } = await getTestServer()
+
+  const upsertTextRes = await axios.post("/files/upsert", {
+    file_path: "/nested/path/manual.txt",
+    text_content: "Nested text file",
+  })
+
+  const byIdRes = await axios.get("/files/download", {
+    params: { file_id: upsertTextRes.data.file.file_id },
+  })
+  expect(byIdRes.status).toBe(200)
+  expect(byIdRes.data).toBe("Nested text file")
+  expect(byIdRes.headers.get("content-disposition")).toBe(
+    'attachment; filename="manual.txt"',
+  )
+
+  const byPathUrlRes = await axios.get("/files/download/nested/path/manual.txt")
+  expect(byPathUrlRes.status).toBe(200)
+  expect(byPathUrlRes.data).toBe("Nested text file")
+
+  const binary = Buffer.from([222, 173, 190, 239])
+  await axios.post("/files/upsert", {
+    file_path: "/nested/path/data.bin",
+    binary_content_b64: binary.toString("base64"),
+  })
+
+  const binaryByPathRes = await axios.get("/files/download/nested/path/data.bin", {
+    responseType: "arrayBuffer",
+  })
+  expect(binaryByPathRes.status).toBe(200)
+  expect(Buffer.from(binaryByPathRes.data)).toEqual(binary)
+  expect(binaryByPathRes.headers.get("content-type")).toBe(
+    "application/octet-stream",
+  )
+})
+
 test("file delete operations", async () => {
   const { axios } = await getTestServer()
 
