@@ -92,6 +92,19 @@ The server persists the binary payload exactly as provided. When retrieving the
 file with `/files/get`, the same `binary_content_b64` string will be returned
 and can be decoded back to the original bytes in your client code.
 
+#### Download File
+
+```http
+GET /files/download?file_id=1
+# or
+GET /files/download?file_path=path/to/file.txt
+# or
+GET /files/download/path/to/file.txt
+```
+
+Returns the file body directly with `Content-Disposition: attachment` so clients
+can save the file.
+
 #### Get File
 
 ```http
