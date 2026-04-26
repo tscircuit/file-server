@@ -109,6 +109,36 @@ Response: {
 }
 ```
 
+#### Download File
+
+Download a file with `Content-Disposition: attachment` so browsers treat it as
+a file download rather than inline content. Two URL patterns are supported:
+
+**Query-parameter form** — identify the file by `file_id` or `file_path`:
+
+```http
+GET /files/download?file_path=/path/to/file.txt
+# or
+GET /files/download?file_id=<file_id>
+```
+
+**Path-segment form** — embed the file path directly in the URL:
+
+```http
+GET /files/download/path/to/file.txt
+```
+
+Both forms return the raw file content with:
+
+```
+Content-Disposition: attachment; filename="<filename>"
+Content-Type: text/plain          (text files)
+Content-Type: application/octet-stream  (binary files)
+Content-Length: <bytes>           (binary files only)
+```
+
+Returns `404 File not found` when the file does not exist.
+
 #### List Files
 
 ```http
