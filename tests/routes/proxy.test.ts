@@ -3,13 +3,12 @@ import { getTestServer } from "../fixtures/get-test-server"
 
 describe("proxy route", () => {
   test("should proxy requests to target URL", async () => {
-    const { axios } = await getTestServer()
+    const { ky } = await getTestServer()
 
-    // Create a mock server for testing proxying
     const mockServerPort = 3999
     const mockServer = Bun.serve({
       port: mockServerPort,
-      fetch(req) {
+      fetch() {
         return new Response(
           JSON.stringify({ message: "Hello from mock server!" }),
           {
@@ -20,33 +19,32 @@ describe("proxy route", () => {
     })
 
     try {
-      const response = await axios.get("/proxy", {
+      const response = await ky.get("proxy", {
         headers: {
           "X-Target-Url": `http://localhost:${mockServerPort}`,
         },
       })
 
       expect(response.status).toBe(200)
-      expect(response.data).toEqual({ message: "Hello from mock server!" })
+      expect(await response.json()).toEqual({ message: "Hello from mock server!" })
     } finally {
       mockServer.stop()
     }
   })
 
   test("should return 400 when X-Target-Url header is missing", async () => {
-    const { axios } = await getTestServer()
+    const { ky } = await getTestServer()
 
-    const response = await axios.get("/proxy", { validateStatus: () => true })
+    const response = await ky.get("proxy")
     expect(response.status).toBe(400)
-    expect(response.data).toEqual({
+    expect(await response.json()).toEqual({
       error: "X-Target-Url header is required",
     })
   })
 
   test("should handle POST requests with a body correctly", async () => {
-    const { axios } = await getTestServer()
+    const { ky } = await getTestServer()
 
-    // Create a mock server that echoes back the request body
     const mockServerPort = 4000
     const mockServer = Bun.serve({
       port: mockServerPort,
@@ -59,7 +57,8 @@ describe("proxy route", () => {
 
     try {
       const testData = { test: "data" }
-      const response = await axios.post("/proxy", testData, {
+      const response = await ky.post("proxy", {
+        json: testData,
         headers: {
           "X-Target-Url": `http://localhost:${mockServerPort}`,
           "Content-Type": "application/json",
@@ -67,7 +66,7 @@ describe("proxy route", () => {
       })
 
       expect(response.status).toBe(200)
-      expect(response.data).toEqual(testData)
+      expect(await response.json()).toEqual(testData)
     } finally {
       mockServer.stop()
     }
