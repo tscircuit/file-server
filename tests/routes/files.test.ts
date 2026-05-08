@@ -189,7 +189,7 @@ test("file delete operations", async () => {
     },
   })
   expect(missingPathRes.status).toBe(404)
-  expect(await missingPathRes.json()).toEqual({ error: "File not found" })
+  expect(await missingPathRes.json<any>()).toEqual({ error: "File not found" })
 
   const missingIdRes = await ky.post("files/delete", {
     json: {
@@ -197,7 +197,7 @@ test("file delete operations", async () => {
     },
   })
   expect(missingIdRes.status).toBe(404)
-  expect(await missingIdRes.json()).toEqual({ error: "File not found" })
+  expect(await missingIdRes.json<any>()).toEqual({ error: "File not found" })
 
   const badDeleteRes = await ky.delete("files/delete", { json: {} })
   expect(badDeleteRes.status).toBe(400)
@@ -263,7 +263,7 @@ test("file rename operations", async () => {
     },
   })
   expect(missingRenameRes.status).toBe(404)
-  expect(await missingRenameRes.json()).toEqual({ file: null })
+  expect(await missingRenameRes.json<any>()).toEqual({ file: null })
 
   await ky.post("files/upsert", {
     json: {
@@ -279,7 +279,7 @@ test("file rename operations", async () => {
     },
   })
   expect(conflictRenameRes.status).toBe(409)
-  expect(await conflictRenameRes.json()).toEqual({ file: null })
+  expect(await conflictRenameRes.json<any>()).toEqual({ file: null })
 })
 
 test("file static serving operations", async () => {
@@ -378,9 +378,9 @@ test("file static serving operations", async () => {
     expect(response.status).toBe(200)
 
     if (file.expectedMime === "application/json") {
-      expect(await response.json()).toEqual(JSON.parse(file.content!))
+      expect(await response.json<any>()).toEqual(JSON.parse(file.content!))
     } else {
-      expect(await response.text()).toBe(file.content)
+      expect(await response.text()).toBe(file.content!)
     }
 
     expect(response.headers.get("content-type")).toBe(file.expectedMime)

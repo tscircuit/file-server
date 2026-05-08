@@ -35,7 +35,7 @@ test("disk proxy file resolution", async () => {
 
     const jsonRes = await ky.get("files/download/disk-test/data.json")
     expect(jsonRes.status).toBe(200)
-    expect(await jsonRes.json()).toEqual({ key: "value" })
+    expect(await jsonRes.json<any>()).toEqual({ key: "value" })
     expect(jsonRes.headers.get("content-type")).toBe("application/json")
 
     const nestedRes = await ky.get("files/download/disk-test/subdir/nested.txt")

@@ -35,7 +35,7 @@ test("http proxy file resolution", async () => {
 
   const jsonRes = await ky.get("files/download/http-test/data.json")
   expect(jsonRes.status).toBe(200)
-  expect(await jsonRes.json()).toEqual({ proxied: true })
+  expect(await jsonRes.json<any>()).toEqual({ proxied: true })
 })
 
 test("http proxy 404 handling", async () => {

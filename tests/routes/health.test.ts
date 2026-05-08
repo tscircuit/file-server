@@ -5,5 +5,5 @@ it("GET /health should return ok", async () => {
   const { ky } = await getTestServer()
   const res = await ky.get("health")
   expect(res.status).toBe(200)
-  expect(await res.json()).toEqual({ ok: true })
+  expect(await res.json<any>()).toEqual({ ok: true })
 })

@@ -26,7 +26,7 @@ describe("proxy route", () => {
       })
 
       expect(response.status).toBe(200)
-      expect(await response.json()).toEqual({ message: "Hello from mock server!" })
+      expect(await response.json<any>()).toEqual({ message: "Hello from mock server!" })
     } finally {
       mockServer.stop()
     }
@@ -37,7 +37,7 @@ describe("proxy route", () => {
 
     const response = await ky.get("proxy")
     expect(response.status).toBe(400)
-    expect(await response.json()).toEqual({
+    expect(await response.json<any>()).toEqual({
       error: "X-Target-Url header is required",
     })
   })
@@ -66,7 +66,7 @@ describe("proxy route", () => {
       })
 
       expect(response.status).toBe(200)
-      expect(await response.json()).toEqual(testData)
+      expect(await response.json<any>()).toEqual(testData)
     } finally {
       mockServer.stop()
     }
