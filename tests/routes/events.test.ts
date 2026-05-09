@@ -2,9 +2,8 @@ import { test, expect } from "bun:test"
 import { getTestServer } from "tests/fixtures/get-test-server"
 
 test("custom events", async () => {
-  const { axios } = await getTestServer()
+  const { ky } = await getTestServer()
 
-  // Create a custom event
   const customEvent = {
     event_type: "USER_LOGIN",
     user_id: "123",
@@ -12,15 +11,16 @@ test("custom events", async () => {
     success: true,
   }
 
-  const createRes = await axios.post("/events/create", customEvent)
-  expect(createRes.data.event.event_type).toBe("USER_LOGIN")
-  expect(createRes.data.event.user_id).toBe("123")
-  expect(createRes.data.event.ip_address).toBe("192.168.1.1")
-  expect(createRes.data.event.success).toBe(true)
+  const createData = await ky
+    .post("events/create", { json: customEvent })
+    .json<{ event: typeof customEvent }>()
+  expect(createData.event.event_type).toBe("USER_LOGIN")
+  expect(createData.event.user_id).toBe("123")
+  expect(createData.event.ip_address).toBe("192.168.1.1")
+  expect(createData.event.success).toBe(true)
 
-  // Verify event is in the list
-  const listRes = await axios.get("/events/list")
-  const createdEvent = listRes.data.event_list[0]
+  const listData = await ky.get("events/list").json<{ event_list: any[] }>()
+  const createdEvent = listData.event_list[0]
   expect(createdEvent.event_type).toBe("USER_LOGIN")
   expect(createdEvent.user_id).toBe("123")
   expect(createdEvent.ip_address).toBe("192.168.1.1")
@@ -28,52 +28,46 @@ test("custom events", async () => {
 })
 
 test("filter events by event_type", async () => {
-  const { axios } = await getTestServer()
+  const { ky } = await getTestServer()
 
-  await axios.post("/events/create", {
-    event_type: "USER_LOGIN",
-    user_id: "123",
+  await ky.post("events/create", {
+    json: { event_type: "USER_LOGIN", user_id: "123" },
   })
 
-  await axios.post("/events/create", {
-    event_type: "USER_LOGOUT",
-    user_id: "123",
+  await ky.post("events/create", {
+    json: { event_type: "USER_LOGOUT", user_id: "123" },
   })
 
-  const listAllRes = await axios.get("/events/list")
-  expect(listAllRes.data.event_list).toHaveLength(2)
+  const listAllData = await ky.get("events/list").json<{ event_list: any[] }>()
+  expect(listAllData.event_list).toHaveLength(2)
 
-  const filteredRes = await axios.get("/events/list", {
-    params: { event_type: "USER_LOGIN" },
-  })
+  const filteredData = await ky
+    .get("events/list", {
+      searchParams: { event_type: "USER_LOGIN" },
+    })
+    .json<{ event_list: any[] }>()
 
-  expect(filteredRes.data.event_list).toHaveLength(1)
-  expect(filteredRes.data.event_list[0].event_type).toBe("USER_LOGIN")
-  expect(filteredRes.data.event_list[0].user_id).toBe("123")
+  expect(filteredData.event_list).toHaveLength(1)
+  expect(filteredData.event_list[0].event_type).toBe("USER_LOGIN")
+  expect(filteredData.event_list[0].user_id).toBe("123")
 })
 
 test("reset events", async () => {
-  const { axios } = await getTestServer()
+  const { ky } = await getTestServer()
 
-  // Create some events
-  await axios.post("/events/create", {
-    event_type: "USER_LOGIN",
-    user_id: "123",
+  await ky.post("events/create", {
+    json: { event_type: "USER_LOGIN", user_id: "123" },
   })
-  await axios.post("/events/create", {
-    event_type: "USER_LOGIN",
-    user_id: "456",
+  await ky.post("events/create", {
+    json: { event_type: "USER_LOGIN", user_id: "456" },
   })
 
-  // Verify events exist
-  let listRes = await axios.get("/events/list")
-  expect(listRes.data.event_list).toHaveLength(2)
+  let listData = await ky.get("events/list").json<{ event_list: any[] }>()
+  expect(listData.event_list).toHaveLength(2)
 
-  // Reset events
-  const resetRes = await axios.post("/events/reset")
-  expect(resetRes.data.ok).toBe(true)
+  const resetData = await ky.post("events/reset").json<{ ok: boolean }>()
+  expect(resetData.ok).toBe(true)
 
-  // Verify events are cleared
-  listRes = await axios.get("/events/list")
-  expect(listRes.data.event_list).toHaveLength(0)
+  listData = await ky.get("events/list").json<{ event_list: any[] }>()
+  expect(listData.event_list).toHaveLength(0)
 })
