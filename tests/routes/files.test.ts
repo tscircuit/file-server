@@ -245,13 +245,15 @@ test("file rename operations", async () => {
 
   const eventsData = await ky.get("events/list").json<{ event_list: any[] }>()
   const createdEvent = eventsData.event_list.find(
-    (e: any) => e.event_type === "FILE_CREATED" && e.file_path === "renamed.txt",
+    (e: any) =>
+      e.event_type === "FILE_CREATED" && e.file_path === "renamed.txt",
   )
   expect(createdEvent).toBeDefined()
   expect(createdEvent.initiator).toBe("test-rename")
 
   const deletedEvent = eventsData.event_list.find(
-    (e: any) => e.event_type === "FILE_DELETED" && e.file_path === "original.txt",
+    (e: any) =>
+      e.event_type === "FILE_DELETED" && e.file_path === "original.txt",
   )
   expect(deletedEvent).toBeDefined()
   expect(deletedEvent.initiator).toBe("test-rename")
@@ -334,9 +336,8 @@ test("file static serving operations", async () => {
     {
       path: "/models/test.glb",
       binaryContent: Buffer.from([
-        0x67, 0x6c, 0x54, 0x46, 0x02, 0x00, 0x00, 0x00, 0x1c, 0x00, 0x00,
-        0x00, 0x4e, 0x4f, 0x44, 0x45, 0x00, 0x00, 0x00, 0x00, 0x80, 0xff,
-        0xfe, 0xfd,
+        0x67, 0x6c, 0x54, 0x46, 0x02, 0x00, 0x00, 0x00, 0x1c, 0x00, 0x00, 0x00,
+        0x4e, 0x4f, 0x44, 0x45, 0x00, 0x00, 0x00, 0x00, 0x80, 0xff, 0xfe, 0xfd,
       ]),
       expectedMime: "model/gltf-binary",
     },

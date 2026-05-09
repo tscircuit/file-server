@@ -66,8 +66,12 @@ test("file proxy CRUD operations", async () => {
   const listData = await listRes.json<any>()
   expect(listData.file_proxies).toHaveLength(2)
 
-  const diskProxy = listData.file_proxies.find((p: any) => p.proxy_type === "disk")
-  const httpProxy = listData.file_proxies.find((p: any) => p.proxy_type === "http")
+  const diskProxy = listData.file_proxies.find(
+    (p: any) => p.proxy_type === "disk",
+  )
+  const httpProxy = listData.file_proxies.find(
+    (p: any) => p.proxy_type === "http",
+  )
   expect(diskProxy).toBeDefined()
   expect(httpProxy).toBeDefined()
 })

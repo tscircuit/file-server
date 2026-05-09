@@ -38,9 +38,7 @@ test("filter events by event_type", async () => {
     json: { event_type: "USER_LOGOUT", user_id: "123" },
   })
 
-  const listAllData = await ky
-    .get("events/list")
-    .json<{ event_list: any[] }>()
+  const listAllData = await ky.get("events/list").json<{ event_list: any[] }>()
   expect(listAllData.event_list).toHaveLength(2)
 
   const filteredData = await ky

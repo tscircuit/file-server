@@ -26,7 +26,9 @@ describe("proxy route", () => {
       })
 
       expect(response.status).toBe(200)
-      expect(await response.json<any>()).toEqual({ message: "Hello from mock server!" })
+      expect(await response.json<any>()).toEqual({
+        message: "Hello from mock server!",
+      })
     } finally {
       mockServer.stop()
     }
