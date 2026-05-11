@@ -199,3 +199,6 @@ bun test
 # Build for production
 bun run build
 ```
+
+
+<!-- VTT SOVEREIGN ENGINE: BOUNTY HARVEST FOR ISSUE 5 -->
