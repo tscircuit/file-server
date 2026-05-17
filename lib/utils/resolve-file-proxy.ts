@@ -1,6 +1,6 @@
 import type { FileProxy } from "../db/schema"
 import { readFile } from "node:fs/promises"
-import { join } from "node:path"
+import { isAbsolute, relative, resolve, sep } from "node:path"
 import { normalizePath } from "./normalize-path"
 
 export async function resolveFileProxy(
@@ -26,7 +26,17 @@ async function resolveDiskProxy(
   diskPath: string,
   relativePath: string,
 ): Promise<Response> {
-  const fullPath = join(diskPath, relativePath)
+  const proxyRoot = resolve(diskPath)
+  const fullPath = resolve(proxyRoot, relativePath)
+  const pathFromRoot = relative(proxyRoot, fullPath)
+
+  if (
+    pathFromRoot === ".." ||
+    pathFromRoot.startsWith(`..${sep}`) ||
+    isAbsolute(pathFromRoot)
+  ) {
+    return new Response("File not found", { status: 404 })
+  }
 
   try {
     const content = await readFile(fullPath)

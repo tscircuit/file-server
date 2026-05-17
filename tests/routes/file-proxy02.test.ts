@@ -91,6 +91,42 @@ test("disk proxy with query param download", async () => {
   }
 })
 
+test("disk proxy blocks paths outside proxy root", async () => {
+  const { axios } = await getTestServer()
+
+  const tempDir = await mkdtemp(join(tmpdir(), "file-proxy-root-test-"))
+  const proxyRoot = join(tempDir, "public")
+
+  try {
+    await mkdir(proxyRoot)
+    await writeFile(join(proxyRoot, "allowed.txt"), "Allowed content")
+    await writeFile(join(tempDir, "secret.txt"), "Secret content")
+
+    await axios.post("/file_proxies/create", {
+      proxy_type: "disk",
+      disk_path: proxyRoot,
+      matching_pattern: "safe-disk/*",
+    })
+
+    const allowedRes = await axios.get("/files/download", {
+      params: { file_path: "/safe-disk/allowed.txt" },
+    })
+    expect(allowedRes.status).toBe(200)
+    expect(allowedRes.data).toBe("Allowed content")
+
+    await expect(
+      axios.get("/files/download", {
+        params: { file_path: "/safe-disk/../secret.txt" },
+      }),
+    ).rejects.toMatchObject({
+      status: 404,
+      data: "File not found",
+    })
+  } finally {
+    await rm(tempDir, { recursive: true, force: true })
+  }
+})
+
 test("disk proxy binary file", async () => {
   const { axios } = await getTestServer()
 
