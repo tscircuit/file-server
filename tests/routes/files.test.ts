@@ -60,12 +60,25 @@ test("binary file operations", async () => {
   expect(downloadRes.headers.get("content-length")).toBe(
     buffer.length.toString(),
   )
+
+  await axios.post("/files/upsert", {
+    file_path: "/nested/bin.dat",
+    binary_content_b64: base64,
+  })
+  const pathDownloadRes = await axios.get("/files/download/nested/bin.dat", {
+    responseType: "arrayBuffer",
+  })
+  expect(pathDownloadRes.status).toBe(200)
+  expect(Buffer.from(pathDownloadRes.data)).toEqual(buffer)
+  expect(pathDownloadRes.headers.get("content-disposition")).toBe(
+    'attachment; filename="bin.dat"',
+  )
 })
 
 test("file download operations", async () => {
   const { axios } = await getTestServer()
 
-  await axios.post("/files/upsert", {
+  const createRes = await axios.post("/files/upsert", {
     file_path: "/download-test.txt",
     text_content: "Test download content",
   })
@@ -78,6 +91,29 @@ test("file download operations", async () => {
   expect(successRes.headers.get("content-type")).toBe("text/plain")
   expect(successRes.headers.get("content-disposition")).toBe(
     'attachment; filename="download-test.txt"',
+  )
+  expect(successRes.headers.get("content-length")).toBe(
+    "Test download content".length.toString(),
+  )
+
+  const byIdRes = await axios.get("/files/download", {
+    params: { file_id: createRes.data.file.file_id },
+  })
+  expect(byIdRes.status).toBe(200)
+  expect(byIdRes.data).toBe("Test download content")
+  expect(byIdRes.headers.get("content-disposition")).toBe(
+    'attachment; filename="download-test.txt"',
+  )
+
+  await axios.post("/files/upsert", {
+    file_path: '/quote"name.txt',
+    text_content: "quoted filename",
+  })
+  const quotedNameRes = await axios.get("/files/download", {
+    params: { file_path: '/quote"name.txt' },
+  })
+  expect(quotedNameRes.headers.get("content-disposition")).toBe(
+    `attachment; filename="quote_name.txt"; filename*=UTF-8''quote%22name.txt`,
   )
 
   expect(
