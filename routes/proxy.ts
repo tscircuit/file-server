@@ -30,6 +30,25 @@ export default withRouteSpec({
 
   const headers = new Headers(req.headers)
 
+  // The X-Sender-* headers are the intended (and only) source of these
+  // request-identity headers. The caller — e.g. a browser making a
+  // same-origin request to this proxy on localhost — must not leak its
+  // OWN Cookie/Origin/Referer to the proxied third-party target. Doing
+  // so leaks session/analytics cookies (privacy bug) and can trip the
+  // target's WAF: easyeda's CloudFront returns 403 when the forwarded
+  // request carries the caller's localhost cookies. Clear the inherited
+  // values first, then re-apply only what the caller explicitly set via
+  // X-Sender-*.
+  headers.delete("Cookie")
+  headers.delete("Origin")
+  headers.delete("Referer")
+
+  // Browser fetch-metadata headers describe the caller's same-origin
+  // fetch and are meaningless / misleading to the proxied target.
+  headers.delete("Sec-Fetch-Site")
+  headers.delete("Sec-Fetch-Mode")
+  headers.delete("Sec-Fetch-Dest")
+
   // Add support for X-Sender-Origin and X-Sender-Host
   const senderOrigin = req.headers.get("X-Sender-Origin")
   if (senderOrigin) {
