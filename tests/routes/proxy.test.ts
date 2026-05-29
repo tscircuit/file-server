@@ -72,4 +72,75 @@ describe("proxy route", () => {
       mockServer.stop()
     }
   })
+
+  test("should NOT forward the caller's own Cookie/Origin to the target", async () => {
+    const { axios } = await getTestServer()
+
+    // Mock target that reflects the headers it received.
+    const mockServerPort = 4001
+    const mockServer = Bun.serve({
+      port: mockServerPort,
+      fetch(req) {
+        return new Response(
+          JSON.stringify({
+            cookie: req.headers.get("cookie"),
+            origin: req.headers.get("origin"),
+          }),
+          { headers: { "Content-Type": "application/json" } },
+        )
+      },
+    })
+
+    try {
+      const response = await axios.get("/proxy", {
+        headers: {
+          "X-Target-Url": `http://localhost:${mockServerPort}`,
+          // Caller's own (e.g. localhost browser) cookie + origin — these
+          // must NOT be relayed to the proxied third-party target.
+          Cookie: "session=secret; ph_phc_test_posthog=%7B%22a%22%3A1%7D",
+          Origin: "http://localhost:3020",
+        },
+      })
+
+      expect(response.status).toBe(200)
+      expect(response.data.cookie).toBeNull()
+      expect(response.data.origin).toBeNull()
+    } finally {
+      mockServer.stop()
+    }
+  })
+
+  test("should forward Cookie/Origin only when given via X-Sender-*", async () => {
+    const { axios } = await getTestServer()
+
+    const mockServerPort = 4002
+    const mockServer = Bun.serve({
+      port: mockServerPort,
+      fetch(req) {
+        return new Response(
+          JSON.stringify({
+            cookie: req.headers.get("cookie"),
+            origin: req.headers.get("origin"),
+          }),
+          { headers: { "Content-Type": "application/json" } },
+        )
+      },
+    })
+
+    try {
+      const response = await axios.get("/proxy", {
+        headers: {
+          "X-Target-Url": `http://localhost:${mockServerPort}`,
+          "X-Sender-Cookie": "intended=value",
+          "X-Sender-Origin": "https://example.com",
+        },
+      })
+
+      expect(response.status).toBe(200)
+      expect(response.data.cookie).toBe("intended=value")
+      expect(response.data.origin).toBe("https://example.com")
+    } finally {
+      mockServer.stop()
+    }
+  })
 })
