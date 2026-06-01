@@ -109,6 +109,23 @@ Response: {
 }
 ```
 
+#### Download File
+
+```http
+GET /files/download?file_id=1
+# or
+GET /files/download?file_path=path/to/file.txt
+# or
+GET /files/download/path/to/file.txt
+
+Response: raw file contents with a Content-Disposition attachment header.
+```
+
+Use the download endpoints when you want a browser-friendly attachment URL
+instead of the JSON metadata returned by `/files/get`. Text files are returned as
+`text/plain`; binary files are decoded from `binary_content_b64` and returned as
+`application/octet-stream` with a `Content-Length` header.
+
 #### List Files
 
 ```http
