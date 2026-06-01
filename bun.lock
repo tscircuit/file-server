@@ -5,7 +5,6 @@
       "name": "@tscircuit/file-server",
       "dependencies": {
         "winterspec": "^0.0.86",
-        "zod": "^3.23.8",
         "zustand": "^4.5.5",
         "zustand-hoist": "^2.0.1",
       },
@@ -16,9 +15,11 @@
         "next": "^14.2.5",
         "redaxios": "^0.5.1",
         "tsup": "^8.3.5",
+        "zod": "^3.23.8",
       },
       "peerDependencies": {
         "typescript": "^5.0.0",
+        "zod": "*",
       },
     },
   },
