@@ -13,6 +13,8 @@ This is a simple file server API, it has the following API:
 
 /health - Health check
 /files/get?file_path=... - Get a file
+/files/download?file_path=... - Download a file as an attachment
+/files/download/path/to/file.txt - Download a file path as an attachment
 /files/list - List all files
 /files/upsert - Upsert a file
 
