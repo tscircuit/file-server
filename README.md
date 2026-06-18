@@ -124,6 +124,24 @@ Response: {
 }
 ```
 
+#### Download File
+
+Download a file with appropriate headers for browser file download prompts.
+
+**Query parameter form:**
+```http
+GET /files/download?file_path=path/to/file.txt
+# or
+GET /files/download?file_id=1
+```
+
+**Path form:**
+```http
+GET /files/download/path/to/file.txt
+```
+
+Both forms return the raw file content with `Content-Disposition: attachment` headers, making them suitable for direct download links in browsers. Text files are served with `Content-Type: text/plain` and binary files with `Content-Type: application/octet-stream`.
+
 ### Event Operations
 
 #### Create Event
