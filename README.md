@@ -109,6 +109,24 @@ Response: {
 }
 ```
 
+#### Download File
+
+Use `/files/download` when the client should receive the stored file as an
+attachment instead of the JSON metadata returned by `/files/get`.
+
+```http
+GET /files/download?file_id=1
+# or
+GET /files/download?file_path=path/to/file.txt
+# or
+GET /files/download/path/to/file.txt
+```
+
+Text files are returned as `text/plain`. Binary files uploaded with
+`binary_content_b64` are decoded and returned as `application/octet-stream`.
+Both responses include a `Content-Disposition: attachment` header using the
+stored file name.
+
 #### List Files
 
 ```http
