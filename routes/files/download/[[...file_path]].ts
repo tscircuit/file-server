@@ -5,6 +5,7 @@ import {
   uint8ArrayToArrayBuffer,
 } from "lib/utils/decode-base64"
 import { resolveFileProxy } from "lib/utils/resolve-file-proxy"
+import { getAttachmentContentDisposition } from "lib/utils/get-attachment-content-disposition"
 
 export default withRouteSpec({
   methods: ["GET"],
@@ -29,15 +30,14 @@ export default withRouteSpec({
   }
 
   const isText = file.text_content !== undefined
+  const fileName = file.file_path.split("/").pop() || "file"
   if (!isText && file.binary_content_b64) {
     const binaryBody = decodeBase64ToUint8Array(file.binary_content_b64)
     const responseBody = uint8ArrayToArrayBuffer(binaryBody)
     return new Response(responseBody, {
       headers: {
         "Content-Type": "application/octet-stream",
-        "Content-Disposition": `attachment; filename="${file.file_path
-          .split("/")
-          .pop()}"`,
+        "Content-Disposition": getAttachmentContentDisposition(fileName),
         "Content-Length": binaryBody.byteLength.toString(),
       },
     })
@@ -46,9 +46,7 @@ export default withRouteSpec({
   return new Response(file.text_content!, {
     headers: {
       "Content-Type": "text/plain",
-      "Content-Disposition": `attachment; filename="${file.file_path
-        .split("/")
-        .pop()}"`,
+      "Content-Disposition": getAttachmentContentDisposition(fileName),
     },
   })
 })

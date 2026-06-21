@@ -112,6 +112,25 @@ test("file download operations2", async () => {
   })
 })
 
+test("file downloads encode non-ASCII filenames", async () => {
+  const { axios } = await getTestServer()
+  const filePath = '/reports/报价 "final".txt'
+
+  await axios.post("/files/upsert", {
+    file_path: filePath,
+    text_content: "International filename",
+  })
+
+  const response = await axios.get("/files/download", {
+    params: { file_path: filePath },
+  })
+
+  expect(response.status).toBe(200)
+  expect(response.headers.get("content-disposition")).toBe(
+    "attachment; filename=\"__ _final_.txt\"; filename*=UTF-8''%E6%8A%A5%E4%BB%B7%20%22final%22.txt",
+  )
+})
+
 test("file delete operations", async () => {
   const { axios } = await getTestServer()
 
