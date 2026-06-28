@@ -1,6 +1,18 @@
 import { test, expect } from "bun:test"
 import { getTestServer } from "tests/fixtures/get-test-server"
 import { Buffer } from "node:buffer"
+import { buildHttpProxyUrl } from "lib/utils/resolve-file-proxy"
+
+test("http proxy URL preserves special characters as path data", () => {
+  const targetUrl = buildHttpProxyUrl(
+    "https://example.com/files/static/source?token=abc",
+    "folder name/report?final#1.txt",
+  )
+
+  expect(targetUrl.toString()).toBe(
+    "https://example.com/files/static/source/folder%20name/report%3Ffinal%231.txt?token=abc",
+  )
+})
 
 test("http proxy file resolution", async () => {
   const { axios, url } = await getTestServer()
@@ -76,6 +88,28 @@ test("http proxy with query param download", async () => {
   })
   expect(downloadRes.status).toBe(200)
   expect(downloadRes.data).toBe("Query param HTTP proxy test")
+})
+
+test("http proxy downloads paths containing URL delimiters", async () => {
+  const { axios, url } = await getTestServer()
+
+  await axios.post("/files/upsert", {
+    file_path: "/special-source/report?final#1.txt",
+    text_content: "Special path HTTP proxy test",
+  })
+
+  await axios.post("/file_proxies/create", {
+    proxy_type: "http",
+    http_target_url: `${url}/files/static/special-source`,
+    matching_pattern: "http-special/*",
+  })
+
+  const downloadRes = await axios.get("/files/download", {
+    params: { file_path: "/http-special/report?final#1.txt" },
+  })
+
+  expect(downloadRes.status).toBe(200)
+  expect(downloadRes.data).toBe("Special path HTTP proxy test")
 })
 
 test("http proxy binary file", async () => {

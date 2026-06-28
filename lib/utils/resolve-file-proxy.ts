@@ -53,11 +53,7 @@ async function resolveHttpProxy(
   httpTargetUrl: string,
   relativePath: string,
 ): Promise<Response> {
-  // Ensure the URL doesn't have double slashes
-  const baseUrl = httpTargetUrl.endsWith("/")
-    ? httpTargetUrl.slice(0, -1)
-    : httpTargetUrl
-  const targetUrl = `${baseUrl}/${relativePath}`
+  const targetUrl = buildHttpProxyUrl(httpTargetUrl, relativePath)
 
   try {
     const response = await fetch(targetUrl)
@@ -89,6 +85,18 @@ async function resolveHttpProxy(
     console.error("HTTP proxy error:", error)
     return new Response("Failed to fetch file from HTTP proxy", { status: 502 })
   }
+}
+
+export function buildHttpProxyUrl(
+  httpTargetUrl: string,
+  relativePath: string,
+): URL {
+  const baseUrl = new URL(httpTargetUrl)
+  if (!baseUrl.pathname.endsWith("/")) {
+    baseUrl.pathname += "/"
+  }
+  baseUrl.pathname += relativePath
+  return baseUrl
 }
 
 function getContentType(fileName: string): string {
