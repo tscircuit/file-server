@@ -112,6 +112,22 @@ test("file download operations2", async () => {
   })
 })
 
+test("download query paths normalize every repeated slash run", async () => {
+  const { axios } = await getTestServer()
+
+  await axios.post("/files/upsert", {
+    file_path: "/normalized/path/file.txt",
+    text_content: "Normalized repeated slashes",
+  })
+
+  const downloadRes = await axios.get("/files/download", {
+    params: { file_path: "/normalized//path///file.txt" },
+  })
+
+  expect(downloadRes.status).toBe(200)
+  expect(downloadRes.data).toBe("Normalized repeated slashes")
+})
+
 test("file delete operations", async () => {
   const { axios } = await getTestServer()
 
