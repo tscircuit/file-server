@@ -247,6 +247,8 @@ const initializer = combine(databaseSchema.parse({}), (set, get) => ({
   matchFileProxy: (file_path: string): FileProxy | undefined => {
     const state = get()
     const normalizedPath = normalizePath(file_path)
+    const matchingProxies: Array<{ proxy: FileProxy; prefixLength: number }> =
+      []
 
     for (const proxy of state.file_proxies) {
       const pattern = proxy.matching_pattern
@@ -254,10 +256,12 @@ const initializer = combine(databaseSchema.parse({}), (set, get) => ({
       if (pattern.endsWith("/*")) {
         const prefix = pattern.slice(0, -1) // Remove the "*" to get "prefix/"
         if (normalizedPath.startsWith(prefix)) {
-          return proxy
+          matchingProxies.push({ proxy, prefixLength: prefix.length })
         }
       }
     }
-    return undefined
+
+    matchingProxies.sort((a, b) => b.prefixLength - a.prefixLength)
+    return matchingProxies[0]?.proxy
   },
 }))

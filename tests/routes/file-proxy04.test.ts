@@ -114,6 +114,45 @@ test("multiple proxies with different patterns", async () => {
   }
 })
 
+test("most specific proxy pattern wins for overlapping prefixes", async () => {
+  const { axios } = await getTestServer()
+
+  const broadDir = await mkdtemp(join(tmpdir(), "file-proxy-broad-"))
+  const specificDir = await mkdtemp(join(tmpdir(), "file-proxy-specific-"))
+
+  try {
+    await writeFile(
+      join(broadDir, "private-file.txt"),
+      "Content from broad proxy",
+    )
+    await writeFile(
+      join(specificDir, "private-file.txt"),
+      "Content from specific proxy",
+    )
+
+    await axios.post("/file_proxies/create", {
+      proxy_type: "disk",
+      disk_path: broadDir,
+      matching_pattern: "overlap/*",
+    })
+
+    await axios.post("/file_proxies/create", {
+      proxy_type: "disk",
+      disk_path: specificDir,
+      matching_pattern: "overlap/private/*",
+    })
+
+    const res = await axios.get(
+      "/files/download/overlap/private/private-file.txt",
+    )
+    expect(res.status).toBe(200)
+    expect(res.data).toBe("Content from specific proxy")
+  } finally {
+    await rm(broadDir, { recursive: true, force: true })
+    await rm(specificDir, { recursive: true, force: true })
+  }
+})
+
 test("no proxy match returns 404", async () => {
   const { axios } = await getTestServer()
 
