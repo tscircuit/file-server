@@ -75,7 +75,7 @@ export default withRouteSpec({
     // Check if there's a matching proxy
     const proxy = ctx.db.matchFileProxy(normalizedPath)
     if (proxy) {
-      return resolveFileProxy(proxy, normalizedPath)
+      return resolveFileProxy(proxy, normalizedPath, { attachment: false })
     }
     return new Response("File not found", { status: 404 })
   }

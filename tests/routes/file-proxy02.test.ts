@@ -91,6 +91,30 @@ test("disk proxy with query param download", async () => {
   }
 })
 
+test("disk proxy static route does not force attachment download", async () => {
+  const { axios } = await getTestServer()
+
+  const tempDir = await mkdtemp(join(tmpdir(), "file-proxy-static-test-"))
+
+  try {
+    await writeFile(join(tempDir, "inline.txt"), "Inline proxy content")
+
+    await axios.post("/file_proxies/create", {
+      proxy_type: "disk",
+      disk_path: tempDir,
+      matching_pattern: "static-disk/*",
+    })
+
+    const staticRes = await axios.get("/files/static/static-disk/inline.txt")
+    expect(staticRes.status).toBe(200)
+    expect(staticRes.data).toBe("Inline proxy content")
+    expect(staticRes.headers.get("content-type")).toBe("text/plain")
+    expect(staticRes.headers.get("content-disposition")).toBeNull()
+  } finally {
+    await rm(tempDir, { recursive: true, force: true })
+  }
+})
+
 test("disk proxy binary file", async () => {
   const { axios } = await getTestServer()
 
