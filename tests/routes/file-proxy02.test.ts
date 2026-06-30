@@ -91,6 +91,42 @@ test("disk proxy with query param download", async () => {
   }
 })
 
+test("disk proxy blocks parent directory traversal", async () => {
+  const { axios } = await getTestServer()
+
+  const tempDir = await mkdtemp(join(tmpdir(), "file-proxy-traversal-"))
+  const proxyRoot = join(tempDir, "root")
+
+  try {
+    await mkdir(proxyRoot)
+    await writeFile(join(proxyRoot, "safe.txt"), "Safe proxy content")
+    await writeFile(join(tempDir, "secret.txt"), "Secret sibling content")
+
+    await axios.post("/file_proxies/create", {
+      proxy_type: "disk",
+      disk_path: proxyRoot,
+      matching_pattern: "traversal/*",
+    })
+
+    const safeRes = await axios.get("/files/download", {
+      params: { file_path: "/traversal/safe.txt" },
+    })
+    expect(safeRes.status).toBe(200)
+    expect(safeRes.data).toBe("Safe proxy content")
+
+    await expect(
+      axios.get("/files/download", {
+        params: { file_path: "/traversal/../secret.txt" },
+      }),
+    ).rejects.toMatchObject({
+      status: 404,
+      data: "File not found",
+    })
+  } finally {
+    await rm(tempDir, { recursive: true, force: true })
+  }
+})
+
 test("disk proxy binary file", async () => {
   const { axios } = await getTestServer()
 
