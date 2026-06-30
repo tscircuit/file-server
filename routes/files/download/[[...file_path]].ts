@@ -29,7 +29,7 @@ export default withRouteSpec({
   }
 
   const isText = file.text_content !== undefined
-  if (!isText && file.binary_content_b64) {
+  if (!isText && file.binary_content_b64 !== undefined) {
     const binaryBody = decodeBase64ToUint8Array(file.binary_content_b64)
     const responseBody = uint8ArrayToArrayBuffer(binaryBody)
     return new Response(responseBody, {

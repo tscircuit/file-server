@@ -62,6 +62,39 @@ test("binary file operations", async () => {
   )
 })
 
+test("zero-byte binary files download and serve as binary", async () => {
+  const { axios, url } = await getTestServer()
+
+  await axios.post("/files/upsert", {
+    file_path: "/empty.bin",
+    binary_content_b64: "",
+  })
+
+  const queryDownloadRes = await fetch(
+    `${url}/files/download?file_path=${encodeURIComponent("/empty.bin")}`,
+  )
+  expect(queryDownloadRes.status).toBe(200)
+  expect(await queryDownloadRes.arrayBuffer()).toHaveProperty("byteLength", 0)
+  expect(queryDownloadRes.headers.get("content-type")).toBe(
+    "application/octet-stream",
+  )
+  expect(queryDownloadRes.headers.get("content-length")).toBe("0")
+
+  const pathDownloadRes = await fetch(`${url}/files/download/empty.bin`)
+  expect(pathDownloadRes.status).toBe(200)
+  expect(await pathDownloadRes.arrayBuffer()).toHaveProperty("byteLength", 0)
+  expect(pathDownloadRes.headers.get("content-type")).toBe(
+    "application/octet-stream",
+  )
+  expect(pathDownloadRes.headers.get("content-length")).toBe("0")
+
+  const staticRes = await fetch(`${url}/files/static/empty.bin`)
+  expect(staticRes.status).toBe(200)
+  expect(await staticRes.arrayBuffer()).toHaveProperty("byteLength", 0)
+  expect(staticRes.headers.get("content-type")).toBe("application/octet-stream")
+  expect(staticRes.headers.get("content-length")).toBe("0")
+})
+
 test("file download operations", async () => {
   const { axios } = await getTestServer()
 
