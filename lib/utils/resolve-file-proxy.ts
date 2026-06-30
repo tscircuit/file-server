@@ -6,9 +6,11 @@ import { normalizePath } from "./normalize-path"
 export async function resolveFileProxy(
   proxy: FileProxy,
   file_path: string,
+  opts: { attachment?: boolean } = {},
 ): Promise<Response> {
   const normalizedPath = normalizePath(file_path)
   const pattern = proxy.matching_pattern
+  const attachment = opts.attachment ?? true
 
   // Extract the relative path after the pattern prefix
   // Pattern: "prefix/*" -> prefix is "prefix/"
@@ -16,15 +18,16 @@ export async function resolveFileProxy(
   const relativePath = normalizedPath.slice(prefix.length)
 
   if (proxy.proxy_type === "disk") {
-    return resolveDiskProxy(proxy.disk_path, relativePath)
+    return resolveDiskProxy(proxy.disk_path, relativePath, { attachment })
   } else {
-    return resolveHttpProxy(proxy.http_target_url, relativePath)
+    return resolveHttpProxy(proxy.http_target_url, relativePath, { attachment })
   }
 }
 
 async function resolveDiskProxy(
   diskPath: string,
   relativePath: string,
+  opts: { attachment: boolean },
 ): Promise<Response> {
   const fullPath = join(diskPath, relativePath)
 
@@ -33,13 +36,15 @@ async function resolveDiskProxy(
     const fileName = relativePath.split("/").pop() || "file"
     const contentType = getContentType(fileName)
 
-    return new Response(content, {
-      headers: {
-        "Content-Type": contentType,
-        "Content-Disposition": `attachment; filename="${fileName}"`,
-        "Content-Length": content.byteLength.toString(),
-      },
+    const headers = new Headers({
+      "Content-Type": contentType,
+      "Content-Length": content.byteLength.toString(),
     })
+    if (opts.attachment) {
+      headers.set("Content-Disposition", `attachment; filename="${fileName}"`)
+    }
+
+    return new Response(content, { headers })
   } catch (error: any) {
     if (error.code === "ENOENT") {
       return new Response("File not found", { status: 404 })
@@ -52,6 +57,7 @@ async function resolveDiskProxy(
 async function resolveHttpProxy(
   httpTargetUrl: string,
   relativePath: string,
+  opts: { attachment: boolean },
 ): Promise<Response> {
   // Ensure the URL doesn't have double slashes
   const baseUrl = httpTargetUrl.endsWith("/")
@@ -79,7 +85,9 @@ async function resolveHttpProxy(
       headers.set("Content-Length", contentLength)
     }
     const fileName = relativePath.split("/").pop() || "file"
-    headers.set("Content-Disposition", `attachment; filename="${fileName}"`)
+    if (opts.attachment) {
+      headers.set("Content-Disposition", `attachment; filename="${fileName}"`)
+    }
 
     return new Response(response.body, {
       status: response.status,

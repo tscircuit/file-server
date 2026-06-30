@@ -78,6 +78,27 @@ test("http proxy with query param download", async () => {
   expect(downloadRes.data).toBe("Query param HTTP proxy test")
 })
 
+test("http proxy static route does not force attachment download", async () => {
+  const { axios, url } = await getTestServer()
+
+  await axios.post("/files/upsert", {
+    file_path: "/static-source/inline.txt",
+    text_content: "Inline HTTP proxy content",
+  })
+
+  await axios.post("/file_proxies/create", {
+    proxy_type: "http",
+    http_target_url: `${url}/files/static/static-source`,
+    matching_pattern: "http-static/*",
+  })
+
+  const staticRes = await axios.get("/files/static/http-static/inline.txt")
+  expect(staticRes.status).toBe(200)
+  expect(staticRes.data).toBe("Inline HTTP proxy content")
+  expect(staticRes.headers.get("content-type")).toBe("text/plain")
+  expect(staticRes.headers.get("content-disposition")).toBeNull()
+})
+
 test("http proxy binary file", async () => {
   const { axios, url } = await getTestServer()
 
