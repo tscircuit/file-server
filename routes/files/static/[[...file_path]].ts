@@ -81,7 +81,7 @@ export default withRouteSpec({
   }
 
   const mimeType = getMimeType(file.file_path)
-  if (file.binary_content_b64) {
+  if (file.binary_content_b64 !== undefined) {
     const binaryBody = decodeBase64ToUint8Array(file.binary_content_b64)
     const responseBody = uint8ArrayToArrayBuffer(binaryBody)
 
