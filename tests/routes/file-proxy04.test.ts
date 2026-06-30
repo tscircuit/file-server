@@ -149,14 +149,14 @@ test("proxy pattern with leading slash normalization", async () => {
   try {
     await writeFile(join(tempDir, "normalized.txt"), "Normalized path content")
 
-    // Create proxy with pattern (without leading slash in pattern)
+    // Create proxy with a leading slash in the pattern
     await axios.post("/file_proxies/create", {
       proxy_type: "disk",
       disk_path: tempDir,
-      matching_pattern: "slash-test/*",
+      matching_pattern: "/slash-test/*",
     })
 
-    // Should work with leading slash in the request path
+    // Should normalize the proxy pattern and match the request path
     const res = await axios.get("/files/download/slash-test/normalized.txt")
     expect(res.status).toBe(200)
     expect(res.data).toBe("Normalized path content")
