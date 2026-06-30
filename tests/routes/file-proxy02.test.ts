@@ -91,6 +91,38 @@ test("disk proxy with query param download", async () => {
   }
 })
 
+test("disk proxy download sanitizes unsafe attachment filename", async () => {
+  const { axios } = await getTestServer()
+
+  const { mkdtemp, writeFile, rm } = await import("node:fs/promises")
+  const { tmpdir } = await import("node:os")
+  const { join } = await import("node:path")
+
+  const tempDir = await mkdtemp(join(tmpdir(), "file-proxy-header-test-"))
+
+  try {
+    await writeFile(join(tempDir, 'bad"name.txt'), "Sanitized proxy header")
+
+    await axios.post("/file_proxies/create", {
+      proxy_type: "disk",
+      disk_path: tempDir,
+      matching_pattern: "header-test/*",
+    })
+
+    const downloadRes = await axios.get(
+      '/files/download/header-test/bad"name.txt',
+    )
+
+    expect(downloadRes.status).toBe(200)
+    expect(downloadRes.data).toBe("Sanitized proxy header")
+    expect(downloadRes.headers.get("content-disposition")).toBe(
+      'attachment; filename="bad_name.txt"',
+    )
+  } finally {
+    await rm(tempDir, { recursive: true, force: true })
+  }
+})
+
 test("disk proxy binary file", async () => {
   const { axios } = await getTestServer()
 
