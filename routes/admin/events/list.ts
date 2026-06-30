@@ -1,6 +1,15 @@
 import { withRouteSpec } from "lib/middleware/with-winter-spec"
 import { z } from "zod"
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+}
+
 export default withRouteSpec({
   methods: ["GET"],
   jsonResponse: z.any(),
@@ -34,13 +43,13 @@ export default withRouteSpec({
               .map(
                 ({ event_type, event_id, created_at, ...rest }) => `
               <tr>
-                <td class="border border-gray-300 p-2">${event_type}</td>
-                <td class="border border-gray-300 p-2">${new Date(
-                  created_at,
-                ).toLocaleString()}</td>
-                <td class="border border-gray-300 p-2">${JSON.stringify(rest)
-                  .slice(1, -1)
-                  .replace(/"([^"]+)":/g, "$1:")}</td>
+                <td class="border border-gray-300 p-2">${escapeHtml(event_type)}</td>
+                <td class="border border-gray-300 p-2">${escapeHtml(new Date(created_at).toLocaleString())}</td>
+                <td class="border border-gray-300 p-2">${escapeHtml(
+                  JSON.stringify(rest)
+                    .slice(1, -1)
+                    .replace(/"([^"]+)":/g, "$1:"),
+                )}</td>
               </tr>
             `,
               )
