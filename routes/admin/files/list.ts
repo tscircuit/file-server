@@ -1,4 +1,5 @@
 import { withRouteSpec } from "lib/middleware/with-winter-spec"
+import { escapeHtml } from "lib/utils/escape-html"
 import { z } from "zod"
 
 export default withRouteSpec({
@@ -32,7 +33,7 @@ export default withRouteSpec({
           .map(
             (file) => `
           <tr>
-            <td>${file.file_path}</td>
+            <td>${escapeHtml(file.file_path)}</td>
             <td>
               <a href="./get?file_path=${encodeURIComponent(file.file_path)}">View Details</a>
             </td>
