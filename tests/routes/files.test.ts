@@ -112,6 +112,26 @@ test("file download operations2", async () => {
   })
 })
 
+test("download content disposition sanitizes unsafe filenames", async () => {
+  const { axios } = await getTestServer()
+
+  const createRes = await axios.post("/files/upsert", {
+    file_path: '/quoted/bad"name\r\nx-injected: 1.txt',
+    text_content: "safe header",
+  })
+
+  const downloadRes = await axios.get("/files/download", {
+    params: { file_id: createRes.data.file.file_id },
+  })
+
+  expect(downloadRes.status).toBe(200)
+  expect(downloadRes.data).toBe("safe header")
+  expect(downloadRes.headers.get("content-disposition")).toBe(
+    'attachment; filename="bad_name__x-injected: 1.txt"',
+  )
+  expect(downloadRes.headers.get("x-injected")).toBeNull()
+})
+
 test("file delete operations", async () => {
   const { axios } = await getTestServer()
 
