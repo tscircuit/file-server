@@ -17,10 +17,10 @@ export default withRouteSpec({
         <nav>
           <ul class="space-y-4">
             <li>
-              <a href="./admin/files/list" class="block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">File Management</a>
+              <a href="./files/list" class="block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">File Management</a>
             </li>
             <li>
-              <a href="./admin/events/list" class="block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">Event Management</a>
+              <a href="./events/list" class="block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">Event Management</a>
             </li>
           </ul>
         </nav>
