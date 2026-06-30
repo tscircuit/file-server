@@ -93,3 +93,33 @@ test("file proxy create validation - duplicate pattern", async () => {
     status: 400,
   })
 })
+
+test("file proxy patterns normalize leading slashes for lookup and duplicates", async () => {
+  const { axios } = await getTestServer()
+
+  const createRes = await axios.post("/file_proxies/create", {
+    proxy_type: "disk",
+    disk_path: "/tmp/test",
+    matching_pattern: "/normalized/*",
+  })
+  expect(createRes.status).toBe(200)
+  expect(createRes.data.file_proxy.matching_pattern).toBe("normalized/*")
+
+  const getWithLeadingSlash = await axios.get("/file_proxies/get", {
+    params: { matching_pattern: "/normalized/*" },
+  })
+  expect(getWithLeadingSlash.status).toBe(200)
+  expect(getWithLeadingSlash.data.file_proxy.file_proxy_id).toBe(
+    createRes.data.file_proxy.file_proxy_id,
+  )
+
+  await expect(
+    axios.post("/file_proxies/create", {
+      proxy_type: "http",
+      http_target_url: "https://example.com",
+      matching_pattern: "normalized/*",
+    }),
+  ).rejects.toMatchObject({
+    status: 400,
+  })
+})

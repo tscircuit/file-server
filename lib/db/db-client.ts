@@ -213,9 +213,13 @@ const initializer = combine(databaseSchema.parse({}), (set, get) => ({
     proxy: Omit<FileProxy, "file_proxy_id" | "created_at">,
   ): FileProxy => {
     let newProxy: FileProxy
+    const normalizedProxy = {
+      ...proxy,
+      matching_pattern: normalizeMatchingPattern(proxy.matching_pattern),
+    }
     set((state) => {
       newProxy = {
-        ...proxy,
+        ...normalizedProxy,
         file_proxy_id: state.idCounter.toString(),
         created_at: new Date().toISOString(),
       } as FileProxy
@@ -232,11 +236,13 @@ const initializer = combine(databaseSchema.parse({}), (set, get) => ({
     matching_pattern?: string
   }): FileProxy | undefined => {
     const state = get()
+    const matchingPattern = query.matching_pattern
+      ? normalizeMatchingPattern(query.matching_pattern)
+      : undefined
     return state.file_proxies.find(
       (p) =>
         (query.file_proxy_id && p.file_proxy_id === query.file_proxy_id) ||
-        (query.matching_pattern &&
-          p.matching_pattern === query.matching_pattern),
+        (matchingPattern && p.matching_pattern === matchingPattern),
     )
   },
 
@@ -261,3 +267,11 @@ const initializer = combine(databaseSchema.parse({}), (set, get) => ({
     return undefined
   },
 }))
+
+function normalizeMatchingPattern(matching_pattern: string): string {
+  if (!matching_pattern.endsWith("/*")) {
+    return normalizePath(matching_pattern)
+  }
+
+  return `${normalizePath(matching_pattern.slice(0, -2))}/*`
+}
