@@ -15,6 +15,8 @@ This is a simple file server API, it has the following API:
 /files/get?file_path=... - Get a file
 /files/list - List all files
 /files/upsert - Upsert a file
+/files/download?file_path=... - Download a file (query param)
+/files/download/[[file_path]] - Download a file (path-based)
 
 /events/list?since=... - List events since a given timestamp
 /events/list?event_type=... - List events filtered by event type
