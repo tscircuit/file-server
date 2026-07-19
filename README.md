@@ -109,6 +109,19 @@ Response: {
 }
 ```
 
+#### Download File
+
+```http
+GET /files/download?file_id=1
+# or
+GET /files/download?file_path=path/to/file.txt
+# or
+GET /files/download/path/to/file.txt
+```
+
+Returns the file body directly with `Content-Disposition: attachment` so clients
+can save the file.
+
 #### List Files
 
 ```http
