@@ -57,6 +57,9 @@ export default withRouteSpec({
 
   // Add support for X-Sender-Cookie
   const senderCookie = req.headers.get("X-Sender-Cookie")
+  // Browser requests to the proxy can include cookies scoped to the proxy
+  // origin. Only forward a cookie that was explicitly supplied for the target.
+  headers.delete("Cookie")
   if (senderCookie) {
     headers.set("Cookie", senderCookie)
   }

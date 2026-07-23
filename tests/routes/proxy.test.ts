@@ -72,4 +72,63 @@ describe("proxy route", () => {
       mockServer.stop()
     }
   })
+
+  test("should not forward proxy-origin cookies to the target", async () => {
+    const { axios } = await getTestServer()
+
+    const mockServerPort = 4001
+    const mockServer = Bun.serve({
+      port: mockServerPort,
+      fetch(req) {
+        return Response.json({
+          cookie: req.headers.get("cookie"),
+        })
+      },
+    })
+
+    try {
+      const response = await axios.get("/proxy", {
+        headers: {
+          "X-Target-Url": `http://localhost:${mockServerPort}`,
+          "X-Sender-Cookie": "",
+          Cookie:
+            'ph_test_posthog={"distinct_id":"localhost-user","session_id":"localhost-session"}',
+        },
+      })
+
+      expect(response.status).toBe(200)
+      expect(response.data.cookie).toBeNull()
+    } finally {
+      mockServer.stop()
+    }
+  })
+
+  test("should forward an explicitly supplied target cookie", async () => {
+    const { axios } = await getTestServer()
+
+    const mockServerPort = 4002
+    const mockServer = Bun.serve({
+      port: mockServerPort,
+      fetch(req) {
+        return Response.json({
+          cookie: req.headers.get("cookie"),
+        })
+      },
+    })
+
+    try {
+      const response = await axios.get("/proxy", {
+        headers: {
+          "X-Target-Url": `http://localhost:${mockServerPort}`,
+          "X-Sender-Cookie": "target_session=valid",
+          Cookie: "localhost_session=unrelated",
+        },
+      })
+
+      expect(response.status).toBe(200)
+      expect(response.data.cookie).toBe("target_session=valid")
+    } finally {
+      mockServer.stop()
+    }
+  })
 })
