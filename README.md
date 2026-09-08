@@ -109,6 +109,22 @@ Response: {
 }
 ```
 
+#### Download File
+
+Returns the file contents with `Content-Disposition: attachment`, which makes
+browsers save the file instead of rendering it. Binary files are served as
+`application/octet-stream`, text files as `text/plain`.
+
+```http
+GET /files/download?file_id=1
+# or
+GET /files/download?file_path=path/to/file.txt
+# or
+GET /files/download/path/to/file.txt
+
+Response: raw file contents
+```
+
 #### List Files
 
 ```http
