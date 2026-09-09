@@ -75,7 +75,8 @@ async function resolveHttpProxy(
       headers.set("Content-Type", contentType)
     }
     const contentLength = response.headers.get("Content-Length")
-    if (contentLength) {
+    // A decoded response body no longer has the upstream compressed length.
+    if (contentLength && !response.headers.has("Content-Encoding")) {
       headers.set("Content-Length", contentLength)
     }
     const fileName = relativePath.split("/").pop() || "file"
