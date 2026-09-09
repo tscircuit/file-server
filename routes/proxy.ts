@@ -82,6 +82,10 @@ export default withRouteSpec({
 
     // Create a new response with the target's body but without problematic headers
     const responseHeaders = new Headers(response.headers)
+    // fetch decodes compressed bodies but retains their encoded byte length.
+    if (req.method !== "HEAD" && responseHeaders.has("content-encoding")) {
+      responseHeaders.delete("content-length")
+    }
     responseHeaders.delete("content-encoding") // Ensure no content-encoding in response
 
     return new Response(response.body, {
