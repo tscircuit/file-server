@@ -12,6 +12,13 @@ export default withRouteSpec({
 })(async (req, ctx) => {
   const { file_id, file_path, initiator } = req.commonParams
 
+  if (file_id && file_path) {
+    return ctx.json(
+      { error: "Provide only one of file_id or file_path" },
+      { status: 400 },
+    )
+  }
+
   if (!file_id && !file_path) {
     return ctx.json(
       { error: "Either file_id or file_path must be provided" },

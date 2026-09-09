@@ -107,25 +107,25 @@ const initializer = combine(databaseSchema.parse({}), (set, get) => ({
       ]
 
       // Emit FILE_CREATED for new path
-      state.events.push({
+      const createdEvent: FileServerEvent = {
         event_id: (state.idCounter + 0).toString(),
         event_type: "FILE_CREATED",
         file_path: normNew,
         created_at: new Date().toISOString(),
         initiator: opts.initiator,
-      })
+      }
       // Emit FILE_DELETED for old path
-      state.events.push({
+      const deletedEvent: FileServerEvent = {
         event_id: (state.idCounter + 1).toString(),
         event_type: "FILE_DELETED",
         file_path: normOld,
         created_at: new Date().toISOString(),
         initiator: opts.initiator,
-      })
+      }
 
       return {
         files,
-        events: state.events,
+        events: [...state.events, createdEvent, deletedEvent],
         idCounter: state.idCounter + 2,
       }
     })
@@ -192,7 +192,8 @@ const initializer = combine(databaseSchema.parse({}), (set, get) => ({
     let events = state.events
 
     if (since) {
-      events = events.filter((e) => e.created_at > since)
+      const sinceTime = Date.parse(since)
+      events = events.filter((e) => Date.parse(e.created_at) > sinceTime)
     }
 
     if (event_type) {
