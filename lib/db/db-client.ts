@@ -106,26 +106,27 @@ const initializer = combine(databaseSchema.parse({}), (set, get) => ({
         ...state.files.slice(fileIndex + 1),
       ]
 
-      // Emit FILE_CREATED for new path
-      state.events.push({
-        event_id: (state.idCounter + 0).toString(),
-        event_type: "FILE_CREATED",
-        file_path: normNew,
-        created_at: new Date().toISOString(),
-        initiator: opts.initiator,
-      })
-      // Emit FILE_DELETED for old path
-      state.events.push({
-        event_id: (state.idCounter + 1).toString(),
-        event_type: "FILE_DELETED",
-        file_path: normOld,
-        created_at: new Date().toISOString(),
-        initiator: opts.initiator,
-      })
-
+      // Build a fresh events array so callers holding the previous array
+      // do not observe it changing underneath them.
       return {
         files,
-        events: state.events,
+        events: [
+          ...state.events,
+          {
+            event_id: (state.idCounter + 0).toString(),
+            event_type: "FILE_CREATED" as const,
+            file_path: normNew,
+            created_at: new Date().toISOString(),
+            initiator: opts.initiator,
+          },
+          {
+            event_id: (state.idCounter + 1).toString(),
+            event_type: "FILE_DELETED" as const,
+            file_path: normOld,
+            created_at: new Date().toISOString(),
+            initiator: opts.initiator,
+          },
+        ],
         idCounter: state.idCounter + 2,
       }
     })
@@ -192,7 +193,10 @@ const initializer = combine(databaseSchema.parse({}), (set, get) => ({
     let events = state.events
 
     if (since) {
-      events = events.filter((e) => e.created_at > since)
+      // Compare absolute instants so equivalent timestamps with different
+      // timezone offsets filter identically (string comparison would not).
+      const sinceMs = new Date(since).getTime()
+      events = events.filter((e) => new Date(e.created_at).getTime() > sinceMs)
     }
 
     if (event_type) {

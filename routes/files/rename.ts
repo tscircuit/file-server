@@ -1,4 +1,5 @@
 import { withRouteSpec } from "lib/middleware/with-winter-spec"
+import { normalizePath } from "lib/utils/normalize-path"
 import { z } from "zod"
 
 export default withRouteSpec({
@@ -21,6 +22,12 @@ export default withRouteSpec({
   }),
 })(async (req, ctx) => {
   const body = await req.json()
+
+  // A normalized empty path ("", "/") does not address a file and would
+  // leave an unreachable entry behind, so fail fast without mutating state.
+  if (normalizePath(body.new_file_path) === "") {
+    return ctx.json({ file: null }, { status: 400 })
+  }
 
   // First check if the old file exists
   const oldFile = ctx.db.getFileByPath(body.old_file_path)
