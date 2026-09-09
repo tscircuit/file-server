@@ -12,6 +12,15 @@ export default withRouteSpec({
 })(async (req, ctx) => {
   const { file_id, file_path, initiator } = req.commonParams
 
+  // Deleting by either selector uses OR matching, so accepting both could
+  // remove two different files while only reporting a single deletion.
+  if (file_id && file_path) {
+    return ctx.json(
+      { error: "Provide either file_id or file_path, not both" },
+      { status: 400 },
+    )
+  }
+
   if (!file_id && !file_path) {
     return ctx.json(
       { error: "Either file_id or file_path must be provided" },

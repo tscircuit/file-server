@@ -1,4 +1,5 @@
 import { withRouteSpec } from "lib/middleware/with-winter-spec"
+import { normalizePath } from "lib/utils/normalize-path"
 import { z } from "zod"
 
 export default withRouteSpec({
@@ -31,6 +32,14 @@ export default withRouteSpec({
   }),
 })(async (req, ctx) => {
   const body = await req.json()
+  // normalizePath maps "" and "/" to "". Those do not address a file and
+  // would create entries that file lookup (which treats "" as missing) can't
+  // retrieve, so reject them before mutating state.
+  if (normalizePath(body.file_path) === "") {
+    return new Response("file_path must not be empty or root", {
+      status: 400,
+    })
+  }
   const file = ctx.db.upsertFile(body, { initiator: body.initiator })
   return ctx.json({ file })
 })
