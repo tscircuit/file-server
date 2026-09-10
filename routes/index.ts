@@ -9,12 +9,14 @@ export default withRouteSpec({
     `<html><body>
 
 <pre>
-This is a simple file server API, it has the following API:
 
 /health - Health check
 /files/get?file_path=... - Get a file
+/files/download?file_path=... - Download a file (attachment)
+/files/download/[[file_path]] - Download a file by path (attachment)
 /files/list - List all files
 /files/upsert - Upsert a file
+
 
 /events/list?since=... - List events since a given timestamp
 /events/list?event_type=... - List events filtered by event type
