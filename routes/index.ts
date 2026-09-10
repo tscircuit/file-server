@@ -7,12 +7,14 @@ export default withRouteSpec({
 })((req, ctx) => {
   return new Response(
     `<html><body>
-
 <pre>
 This is a simple file server API, it has the following API:
 
 /health - Health check
 /files/get?file_path=... - Get a file
+/files/download?file_path=... - Download a file (or /files/download/path/to/file)
+/files/list - List all files
+/files/upsert - Upsert a file
 /files/list - List all files
 /files/upsert - Upsert a file
 
