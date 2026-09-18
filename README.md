@@ -109,6 +109,21 @@ Response: {
 }
 ```
 
+#### Download File
+
+Download files directly with `Content-Disposition: attachment` headers. Supports both query parameter and path parameter URL styles:
+
+```http
+# Query parameter style (by file_path or file_id)
+GET /files/download?file_path=path/to/file.txt
+GET /files/download?file_id=1
+
+# Path parameter style
+GET /files/download/path/to/file.txt
+```
+
+Responses return the raw file content (`text/plain` for text files, or `application/octet-stream` for binary files) with proper attachment filename headers.
+
 #### List Files
 
 ```http
