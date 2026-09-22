@@ -20,6 +20,11 @@ export default withRouteSpec({
   }),
 })((req, ctx) => {
   const { file_id, file_path } = req.query
+
+  if (file_id && file_path) {
+    return ctx.json({ file: null }, { status: 400 })
+  }
+
   const file = ctx.db.getFile({ file_id, file_path }) ?? null
   return ctx.json({ file })
 })
