@@ -14,6 +14,13 @@ export default withRouteSpec({
   }),
 })(async (req, ctx) => {
   const { file_id, file_path } = req.query
+
+  if (file_id && file_path) {
+    return new Response("Provide only one of file_id or file_path", {
+      status: 400,
+    })
+  }
+
   const file = ctx.db.getFile({ file_id, file_path })
 
   if (!file) {
