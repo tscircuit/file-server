@@ -24,8 +24,8 @@ export default withRouteSpec({
   }
 
   let body = undefined
-  if (["POST", "PUT", "PATCH"].includes(req.method)) {
-    body = await req.clone().text()
+  if (!["GET", "HEAD"].includes(req.method)) {
+    body = await req.clone().arrayBuffer()
   }
 
   const headers = new Headers(req.headers)
