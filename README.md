@@ -124,6 +124,27 @@ Response: {
 }
 ```
 
+#### Download File
+
+Download a file by its `file_id` or `file_path` using query parameters, or by
+appending the file path directly to the URL. Responses are sent as an
+attachment with a `Content-Disposition` header, and binary files are served as
+`application/octet-stream`.
+
+```http
+# Query parameter style
+GET /files/download?file_id=1
+# or
+GET /files/download?file_path=path/to/file.txt
+
+# Path parameter style (catch-all)
+GET /files/download/path/to/file.txt
+```
+
+If no matching file is found, the server responds with `404 File not found`.
+When the requested path matches a configured file proxy, the download is
+resolved through that proxy instead.
+
 ### Event Operations
 
 #### Create Event
