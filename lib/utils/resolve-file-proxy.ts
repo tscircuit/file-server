@@ -1,7 +1,17 @@
-import type { FileProxy } from "../db/schema"
 import { readFile } from "node:fs/promises"
-import { join } from "node:path"
+import { join, resolve, sep } from "node:path"
+import type { FileProxy } from "../db/schema"
 import { normalizePath } from "./normalize-path"
+
+/**
+ * A relative proxy path must never contain ".." segments: the request path is
+ * user-controlled, and a dot-dot segment would let a caller read anywhere the
+ * server process can reach (both on disk proxies and by sending traversal
+ * segments to the upstream HTTP target).
+ */
+export function proxyPathHasParentSegment(relativePath: string): boolean {
+  return relativePath.split(/[\\/]/).includes("..")
+}
 
 export async function resolveFileProxy(
   proxy: FileProxy,
@@ -15,6 +25,10 @@ export async function resolveFileProxy(
   const prefix = pattern.slice(0, -1) // Remove "*" to get "prefix/"
   const relativePath = normalizedPath.slice(prefix.length)
 
+  if (proxyPathHasParentSegment(relativePath)) {
+    return new Response("Invalid proxy file path", { status: 400 })
+  }
+
   if (proxy.proxy_type === "disk") {
     return resolveDiskProxy(proxy.disk_path, relativePath)
   } else {
@@ -26,7 +40,14 @@ async function resolveDiskProxy(
   diskPath: string,
   relativePath: string,
 ): Promise<Response> {
-  const fullPath = join(diskPath, relativePath)
+  // Containment check: even without ".." segments, resolve the path against
+  // the proxy root and refuse anything that does not stay inside it
+  // (defense in depth against separator/platform surprises).
+  const root = resolve(diskPath)
+  const fullPath = join(root, relativePath)
+  if (!fullPath.startsWith(root + sep) && fullPath !== root) {
+    return new Response("Invalid proxy file path", { status: 400 })
+  }
 
   try {
     const content = await readFile(fullPath)

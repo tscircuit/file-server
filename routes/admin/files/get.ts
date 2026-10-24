@@ -1,4 +1,5 @@
 import { withRouteSpec } from "lib/middleware/with-winter-spec"
+import { escapeHtml } from "lib/utils/escape-html"
 import { z } from "zod"
 
 export default withRouteSpec({
@@ -15,10 +16,16 @@ export default withRouteSpec({
     return new Response("File not found", { status: 404 })
   }
 
+  const escapedPath = escapeHtml(file.file_path)
+  // Attribute values escaped (prevents attribute breakout); URLs unchanged
+  // for normal paths so existing link consumers keep working.
+  const downloadHref = `../../files/download?file_path=${escapeHtml(`/${file.file_path}`)}`
+  const staticHref = `../../files/static/${escapeHtml(file.file_path)}`
+
   return new Response(
     `<html>
     <head>
-      <title>File Details - ${file.file_path}</title>
+      <title>File Details - ${escapedPath}</title>
       <style>
         .container { max-width: 800px; margin: 0 auto; padding: 20px; }
         .details { margin-bottom: 20px; }
@@ -33,14 +40,14 @@ export default withRouteSpec({
         <p><a href="./list">← Back to file list</a></p>
         <h1>File Details</h1>
         <div class="details">
-          <p><span class="label">File ID:</span> ${file.file_id}</p>
-          <p><span class="label">File Path:</span> ${file.file_path}</p>
-          <p><span class="label">Created At:</span> ${file.created_at}</p>
+          <p><span class="label">File ID:</span> ${escapeHtml(file.file_id)}</p>
+          <p><span class="label">File Path:</span> ${escapedPath}</p>
+          <p><span class="label">Created At:</span> ${escapeHtml(file.created_at)}</p>
         </div>
         <h2>Links:</h2>
         <ul>
-          <li><a href="../../files/download?file_path=/${file.file_path}">Download File</a></li>
-          <li><a href="../../files/static/${file.file_path}">Static Route</a></li>
+          <li><a href="${downloadHref}">Download File</a></li>
+          <li><a href="${staticHref}">Static Route</a></li>
         </ul>
         <h2>Content:</h2>
         <pre>${(file.text_content ?? "[binary content]")

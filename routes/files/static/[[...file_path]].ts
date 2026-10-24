@@ -54,6 +54,27 @@ const getMimeType = (filePath: string): string => {
   return mimeTypes[ext || ""] || "application/octet-stream"
 }
 
+/**
+ * Content types that execute script when navigated to directly. The static
+ * route serves user-written content on the same origin as the /admin
+ * dashboards, so these responses get a sandboxing CSP (no script execution,
+ * no same-origin access) plus nosniff, in addition to their file type.
+ */
+const ACTIVE_CONTENT_TYPES = new Set([
+  "text/html",
+  "text/javascript",
+  "image/svg+xml",
+  "application/xml",
+])
+
+function applyStaticContentHeaders(headers: Headers): Headers {
+  headers.set("X-Content-Type-Options", "nosniff")
+  if (ACTIVE_CONTENT_TYPES.has(headers.get("Content-Type") ?? "")) {
+    headers.set("Content-Security-Policy", "sandbox")
+  }
+  return headers
+}
+
 export default withRouteSpec({
   methods: ["GET"],
   pathParams: z.object({
@@ -75,7 +96,11 @@ export default withRouteSpec({
     // Check if there's a matching proxy
     const proxy = ctx.db.matchFileProxy(normalizedPath)
     if (proxy) {
-      return resolveFileProxy(proxy, normalizedPath)
+      const proxiedResponse = await resolveFileProxy(proxy, normalizedPath)
+      return new Response(proxiedResponse.body, {
+        status: proxiedResponse.status,
+        headers: applyStaticContentHeaders(proxiedResponse.headers),
+      })
     }
     return new Response("File not found", { status: 404 })
   }
@@ -85,17 +110,21 @@ export default withRouteSpec({
     const binaryBody = decodeBase64ToUint8Array(file.binary_content_b64)
     const responseBody = uint8ArrayToArrayBuffer(binaryBody)
 
-    return new Response(responseBody, {
-      headers: {
+    const headers = applyStaticContentHeaders(
+      new Headers({
         "Content-Type": mimeType,
         "Content-Length": binaryBody.byteLength.toString(),
-      },
-    })
+      }),
+    )
+
+    return new Response(responseBody, { headers })
   }
 
+  const textHeaders = applyStaticContentHeaders(
+    new Headers({ "Content-Type": mimeType }),
+  )
+
   return new Response(file.text_content!, {
-    headers: {
-      "Content-Type": mimeType,
-    },
+    headers: textHeaders,
   })
 })

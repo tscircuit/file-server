@@ -1,4 +1,5 @@
 import { withRouteSpec } from "lib/middleware/with-winter-spec"
+import { escapeHtml } from "lib/utils/escape-html"
 import { z } from "zod"
 
 export default withRouteSpec({
@@ -31,19 +32,22 @@ export default withRouteSpec({
                   new Date(b.created_at).valueOf() -
                   new Date(a.created_at).valueOf(),
               )
-              .map(
-                ({ event_type, event_id, created_at, ...rest }) => `
+              .map(({ event_type, event_id, created_at, ...rest }) => {
+                const details = escapeHtml(
+                  JSON.stringify(rest)
+                    .slice(1, -1)
+                    .replace(/"([^"]+)":/g, "$1:"),
+                )
+                return `
               <tr>
-                <td class="border border-gray-300 p-2">${event_type}</td>
+                <td class="border border-gray-300 p-2">${escapeHtml(event_type)}</td>
                 <td class="border border-gray-300 p-2">${new Date(
                   created_at,
                 ).toLocaleString()}</td>
-                <td class="border border-gray-300 p-2">${JSON.stringify(rest)
-                  .slice(1, -1)
-                  .replace(/"([^"]+)":/g, "$1:")}</td>
+                <td class="border border-gray-300 p-2">${details}</td>
               </tr>
-            `,
-              )
+            `
+              })
               .join("")}
           </tbody>
         </table>
