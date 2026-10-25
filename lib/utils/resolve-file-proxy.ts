@@ -1,6 +1,6 @@
-import type { FileProxy } from "../db/schema"
 import { readFile } from "node:fs/promises"
-import { join } from "node:path"
+import { join, resolve, sep } from "node:path"
+import type { FileProxy } from "../db/schema"
 import { normalizePath } from "./normalize-path"
 
 export async function resolveFileProxy(
@@ -15,18 +15,37 @@ export async function resolveFileProxy(
   const prefix = pattern.slice(0, -1) // Remove "*" to get "prefix/"
   const relativePath = normalizedPath.slice(prefix.length)
 
+  // Block path traversal: reject paths containing '..' segments
+  const segments = relativePath.split("/")
+  if (segments.includes("..")) {
+    return new Response("Invalid path: path traversal not allowed", {
+      status: 400,
+    })
+  }
+
   if (proxy.proxy_type === "disk") {
     return resolveDiskProxy(proxy.disk_path, relativePath)
-  } else {
-    return resolveHttpProxy(proxy.http_target_url, relativePath)
   }
+  return resolveHttpProxy(proxy.http_target_url, relativePath)
 }
 
 async function resolveDiskProxy(
   diskPath: string,
   relativePath: string,
 ): Promise<Response> {
-  const fullPath = join(diskPath, relativePath)
+  const resolvedDiskPath = resolve(diskPath)
+  const fullPath = resolve(diskPath, relativePath)
+
+  // Defense in depth: verify that fullPath is contained within resolvedDiskPath root
+  const rootWithSep = resolvedDiskPath.endsWith(sep)
+    ? resolvedDiskPath
+    : resolvedDiskPath + sep
+
+  if (fullPath !== resolvedDiskPath && !fullPath.startsWith(rootWithSep)) {
+    return new Response("Invalid path: access outside root denied", {
+      status: 403,
+    })
+  }
 
   try {
     const content = await readFile(fullPath)
