@@ -1,5 +1,6 @@
 import { withRouteSpec } from "lib/middleware/with-winter-spec"
 import { z } from "zod"
+import { normalizePath } from "lib/utils/normalize-path"
 
 export default withRouteSpec({
   methods: ["POST"],
@@ -21,6 +22,9 @@ export default withRouteSpec({
   }),
 })(async (req, ctx) => {
   const body = await req.json()
+  if (!normalizePath(body.new_file_path)) {
+    return new Response("new_file_path must name a file", { status: 400 })
+  }
 
   // First check if the old file exists
   const oldFile = ctx.db.getFileByPath(body.old_file_path)

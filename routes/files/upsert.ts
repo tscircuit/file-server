@@ -1,5 +1,6 @@
 import { withRouteSpec } from "lib/middleware/with-winter-spec"
 import { z } from "zod"
+import { normalizePath } from "lib/utils/normalize-path"
 
 export default withRouteSpec({
   methods: ["POST"],
@@ -31,6 +32,9 @@ export default withRouteSpec({
   }),
 })(async (req, ctx) => {
   const body = await req.json()
+  if (!normalizePath(body.file_path)) {
+    return new Response("file_path must name a file", { status: 400 })
+  }
   const file = ctx.db.upsertFile(body, { initiator: body.initiator })
   return ctx.json({ file })
 })
