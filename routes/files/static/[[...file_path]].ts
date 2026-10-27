@@ -81,6 +81,10 @@ export default withRouteSpec({
   }
 
   const mimeType = getMimeType(file.file_path)
+  const securityHeaders = {
+    "Content-Security-Policy": "sandbox",
+    "X-Content-Type-Options": "nosniff",
+  }
   if (file.binary_content_b64) {
     const binaryBody = decodeBase64ToUint8Array(file.binary_content_b64)
     const responseBody = uint8ArrayToArrayBuffer(binaryBody)
@@ -89,6 +93,7 @@ export default withRouteSpec({
       headers: {
         "Content-Type": mimeType,
         "Content-Length": binaryBody.byteLength.toString(),
+        ...securityHeaders,
       },
     })
   }
@@ -96,6 +101,7 @@ export default withRouteSpec({
   return new Response(file.text_content!, {
     headers: {
       "Content-Type": mimeType,
+      ...securityHeaders,
     },
   })
 })

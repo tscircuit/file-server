@@ -1,4 +1,5 @@
 import { withRouteSpec } from "lib/middleware/with-winter-spec"
+import { escapeHtml } from "lib/utils/escape-html"
 import { z } from "zod"
 
 export default withRouteSpec({
@@ -15,10 +16,12 @@ export default withRouteSpec({
     return new Response("File not found", { status: 404 })
   }
 
+  const escapedFilePath = escapeHtml(file.file_path)
+
   return new Response(
     `<html>
     <head>
-      <title>File Details - ${file.file_path}</title>
+      <title>File Details - ${escapedFilePath}</title>
       <style>
         .container { max-width: 800px; margin: 0 auto; padding: 20px; }
         .details { margin-bottom: 20px; }
@@ -33,20 +36,17 @@ export default withRouteSpec({
         <p><a href="./list">← Back to file list</a></p>
         <h1>File Details</h1>
         <div class="details">
-          <p><span class="label">File ID:</span> ${file.file_id}</p>
-          <p><span class="label">File Path:</span> ${file.file_path}</p>
-          <p><span class="label">Created At:</span> ${file.created_at}</p>
+          <p><span class="label">File ID:</span> ${escapeHtml(file.file_id)}</p>
+          <p><span class="label">File Path:</span> ${escapedFilePath}</p>
+          <p><span class="label">Created At:</span> ${escapeHtml(file.created_at)}</p>
         </div>
         <h2>Links:</h2>
         <ul>
-          <li><a href="../../files/download?file_path=/${file.file_path}">Download File</a></li>
-          <li><a href="../../files/static/${file.file_path}">Static Route</a></li>
+          <li><a href="../../files/download?file_path=/${escapedFilePath}">Download File</a></li>
+          <li><a href="../../files/static/${escapedFilePath}">Static Route</a></li>
         </ul>
         <h2>Content:</h2>
-        <pre>${(file.text_content ?? "[binary content]")
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")}</pre>
+        <pre>${escapeHtml(file.text_content ?? "[binary content]")}</pre>
       </div>
     </body>
     </html>`,
