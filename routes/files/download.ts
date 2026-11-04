@@ -5,6 +5,7 @@ import {
   uint8ArrayToArrayBuffer,
 } from "lib/utils/decode-base64"
 import { resolveFileProxy } from "lib/utils/resolve-file-proxy"
+import { contentDisposition } from "lib/utils/content-disposition"
 
 export default withRouteSpec({
   methods: ["GET"],
@@ -34,9 +35,7 @@ export default withRouteSpec({
     return new Response(responseBody, {
       headers: {
         "Content-Type": "application/octet-stream",
-        "Content-Disposition": `attachment; filename="${file.file_path
-          .split("/")
-          .pop()}"`,
+        "Content-Disposition": contentDisposition(file.file_path),
         "Content-Length": binaryBody.byteLength.toString(),
       },
     })
@@ -45,9 +44,8 @@ export default withRouteSpec({
   return new Response(file.text_content!, {
     headers: {
       "Content-Type": "text/plain",
-      "Content-Disposition": `attachment; filename="${file.file_path
-        .split("/")
-        .pop()}"`,
+      "Content-Disposition": contentDisposition(file.file_path),
+      "Content-Length": Buffer.byteLength(file.text_content!).toString(),
     },
   })
 })
