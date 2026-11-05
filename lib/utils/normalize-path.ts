@@ -1,6 +1,6 @@
 export function normalizePath(path: string): string {
   if (!path || path === "/") return ""
-  let normalized = path.replace(/\\+/g, "/").replace(/\/\/+/, "/")
+  let normalized = path.replace(/\\+/g, "/").replace(/\/{2,}/g, "/")
   if (normalized.startsWith("/")) {
     normalized = normalized.slice(1)
   }
