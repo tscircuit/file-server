@@ -24,8 +24,8 @@ export default withRouteSpec({
   }
 
   let body = undefined
-  if (["POST", "PUT", "PATCH"].includes(req.method)) {
-    body = await req.clone().text()
+  if (!["GET", "HEAD"].includes(req.method)) {
+    body = await req.clone().arrayBuffer()
   }
 
   const headers = new Headers(req.headers)
@@ -77,7 +77,7 @@ export default withRouteSpec({
     const response = await fetch(targetUrl, {
       method: req.method,
       headers: headers,
-      body: ["GET", "HEAD"].includes(req.method) ? undefined : body,
+      body,
     })
 
     // Create a new response with the target's body but without problematic headers
