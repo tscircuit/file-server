@@ -1,6 +1,14 @@
 import { withRouteSpec } from "lib/middleware/with-winter-spec"
 import { z } from "zod"
 
+const escapeHtml = (value: unknown): string =>
+  String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+
 export default withRouteSpec({
   methods: ["GET"],
   jsonResponse: z.any(),
@@ -32,7 +40,7 @@ export default withRouteSpec({
           .map(
             (file) => `
           <tr>
-            <td>${file.file_path}</td>
+            <td>${escapeHtml(file.file_path)}</td>
             <td>
               <a href="./get?file_path=${encodeURIComponent(file.file_path)}">View Details</a>
             </td>
