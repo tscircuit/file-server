@@ -1,6 +1,6 @@
 import type { FileProxy } from "../db/schema"
 import { readFile } from "node:fs/promises"
-import { join } from "node:path"
+import { resolve, sep } from "node:path"
 import { normalizePath } from "./normalize-path"
 
 export async function resolveFileProxy(
@@ -14,6 +14,12 @@ export async function resolveFileProxy(
   // Pattern: "prefix/*" -> prefix is "prefix/"
   const prefix = pattern.slice(0, -1) // Remove "*" to get "prefix/"
   const relativePath = normalizedPath.slice(prefix.length)
+  if (
+    normalizedPath.split("/").some((seg) => seg === ".." || seg === ".") ||
+    relativePath.split("/").some((seg) => seg === ".." || seg === ".")
+  ) {
+    return new Response("Invalid file path", { status: 400 })
+  }
 
   if (proxy.proxy_type === "disk") {
     return resolveDiskProxy(proxy.disk_path, relativePath)
@@ -26,7 +32,11 @@ async function resolveDiskProxy(
   diskPath: string,
   relativePath: string,
 ): Promise<Response> {
-  const fullPath = join(diskPath, relativePath)
+  const rootPath = resolve(diskPath)
+  const fullPath = resolve(rootPath, relativePath.replace(/^\/+/, ""))
+  if (fullPath !== rootPath && !fullPath.startsWith(rootPath + sep)) {
+    return new Response("Invalid file path", { status: 400 })
+  }
 
   try {
     const content = await readFile(fullPath)
