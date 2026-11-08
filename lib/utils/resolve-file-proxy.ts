@@ -1,6 +1,6 @@
 import type { FileProxy } from "../db/schema"
 import { readFile } from "node:fs/promises"
-import { join } from "node:path"
+import { join, resolve } from "node:path"
 import { normalizePath } from "./normalize-path"
 
 export async function resolveFileProxy(
@@ -15,6 +15,11 @@ export async function resolveFileProxy(
   const prefix = pattern.slice(0, -1) // Remove "*" to get "prefix/"
   const relativePath = normalizedPath.slice(prefix.length)
 
+  // Prevent path traversal outside proxy root
+  if (relativePath.split("/").includes("..")) {
+    return new Response("Forbidden: Path traversal detected", { status: 403 })
+  }
+
   if (proxy.proxy_type === "disk") {
     return resolveDiskProxy(proxy.disk_path, relativePath)
   } else {
@@ -26,7 +31,15 @@ async function resolveDiskProxy(
   diskPath: string,
   relativePath: string,
 ): Promise<Response> {
-  const fullPath = join(diskPath, relativePath)
+  const resolvedDiskRoot = resolve(diskPath)
+  const fullPath = resolve(diskPath, relativePath)
+
+  if (
+    !fullPath.startsWith(resolvedDiskRoot + "/") &&
+    fullPath !== resolvedDiskRoot
+  ) {
+    return new Response("Forbidden: Path traversal detected", { status: 403 })
+  }
 
   try {
     const content = await readFile(fullPath)
