@@ -46,7 +46,11 @@ export default withRouteSpec({
                 <td class="border border-gray-300 p-2">${new Date(
                   created_at,
                 ).toLocaleString()}</td>
-                <td class="border border-gray-300 p-2">${escapeHtml(JSON.stringify(rest).slice(1, -1).replace(/"([^"]+)":/g, "$1:"))}</td>
+                <td class="border border-gray-300 p-2">${escapeHtml(
+                  JSON.stringify(rest)
+                    .slice(1, -1)
+                    .replace(/"([^"]+)":/g, "$1:"),
+                )}</td>
               </tr>
             `,
               )
