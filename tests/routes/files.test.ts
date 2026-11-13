@@ -395,3 +395,32 @@ test("file static serving operations", async () => {
     data: "File not found",
   })
 })
+
+test("download works for file names with non-ascii characters and quotes", async () => {
+  const { url, axios } = await getTestServer()
+
+  for (const filePath of ["/日本語.txt", '/say "hi".txt']) {
+    await axios.post("/files/upsert", {
+      file_path: filePath,
+      text_content: "hello",
+    })
+    const name = filePath.slice(1)
+
+    const byQuery = await fetch(
+      `${url}/files/download?file_path=${encodeURIComponent(filePath)}`,
+    )
+    const byPath = await fetch(
+      `${url}/files/download/${encodeURIComponent(name)}`,
+    )
+
+    for (const res of [byQuery, byPath]) {
+      expect(res.status).toBe(200)
+      expect(await res.text()).toBe("hello")
+      const disposition = res.headers.get("content-disposition")!
+      expect(disposition).toContain(
+        `filename*=UTF-8''${encodeURIComponent(name)}`,
+      )
+      expect(disposition).not.toContain('""')
+    }
+  }
+})
