@@ -2,6 +2,7 @@ import type { FileProxy } from "../db/schema"
 import { readFile } from "node:fs/promises"
 import { join } from "node:path"
 import { normalizePath } from "./normalize-path"
+import { getAttachmentContentDisposition } from "./content-disposition"
 
 export async function resolveFileProxy(
   proxy: FileProxy,
@@ -36,7 +37,7 @@ async function resolveDiskProxy(
     return new Response(content, {
       headers: {
         "Content-Type": contentType,
-        "Content-Disposition": `attachment; filename="${fileName}"`,
+        "Content-Disposition": getAttachmentContentDisposition(fileName),
         "Content-Length": content.byteLength.toString(),
       },
     })
@@ -79,7 +80,10 @@ async function resolveHttpProxy(
       headers.set("Content-Length", contentLength)
     }
     const fileName = relativePath.split("/").pop() || "file"
-    headers.set("Content-Disposition", `attachment; filename="${fileName}"`)
+    headers.set(
+      "Content-Disposition",
+      getAttachmentContentDisposition(fileName),
+    )
 
     return new Response(response.body, {
       status: response.status,
